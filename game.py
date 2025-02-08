@@ -6,11 +6,19 @@ a[0] = all moves of 1st player
 a[1] = all moves of 2nd player
 -1 = no move yet, 0 = cooperate, 1 = defect
 
-Neural network takes in that vector (length 20 since we're doing 10 iterations each)
-and produces a probability of choosing cooperate 
+TODO:
+-implement genetic algorithm
+-implement hill-climbing algorithm
+-tabu search (use LRU cache for hill-climbing
+)
+
+
+
+
 
 
 '''
+
 import random
 import time
 #In general, past_moves[0] = your own moves, past_moves[1] = opponent's moves
@@ -62,9 +70,25 @@ class SuspiciousTitForTat(Player):
         return past_moves[1][i-1]
 
 class ModelPlayer(Player):
+    def __init__(self, model):
+        self.model = model
+    def get_model_move(self, past_moves, i):
+        if i < 3:
+            if i == 0:
+                return (self.model >> 148) & 1
+            if i  == 1:
+                encoding = past_moves[0][0]<<1 + past_moves[1][0]
+                return ((self.model >> 144) >> encoding) & 1
+            if i == 2:
+                encoding = past_moves[0][i-1]<<3 + past_moves[0][i-2]<<2 + past_moves[1][i-1]<<1 + past_moves[1][i-2]
+                return ((self.model >> 128) >> encoding) & 1
+        else: #i >= 3
+            encoding = int(1 in past_moves[1])<<6 + past_moves[0][i-1]<<5 + past_moves[0][i-2]<<4 + past_moves[0][i-3]<<3 \
+                        + past_moves[1][i-1]<<2 + past_moves[1][i-2]<<1 + past_moves[1][i-3]
+            return (self.model >> encoding) & 1    
+        
     def get_action(self, past_moves, i):
-        #Implement model logic
-        return 0 
+        return self.get_model_move(past_moves, i)
 
 cooperateReward = (5, 5)
 betrayalReward = (8, 0)
@@ -75,8 +99,6 @@ bothBetray = (2, 2)
 payoffs = [[cooperateReward[0], betrayedReward[0]], 
              [betrayalReward[0], bothBetray[0]]]
 
-
-print(payoffs)
 
 def playGame(payoffs, player1: Player, player2: Player, numRounds: int):
     score1 = 0
@@ -92,12 +114,10 @@ def playGame(payoffs, player1: Player, player2: Player, numRounds: int):
     # print(player1, player2)
     return (score1, score2)
 
-def calculateFitness(payoffs, models):
+def calculateAllFitnesses(payoffs, models):
     #each player in the pool plays 1 game against each other
-    models = [Defector(), Cooperator(), GrimTrigger(), RandomChooser(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), ModelPlayer()]
-
     scores = [0 for i in range(len(models))]
-
+    
     for i in range(len(models)):
         for j in range(len(models)):
             score1, score2 = playGame(payoffs, models[i], models[j], 10)
@@ -105,34 +125,89 @@ def calculateFitness(payoffs, models):
             scores[j] += score2 
     return scores
 
+def calculateFitness(payoffs, models, modelPlayer):
+    #each player in the pool plays 1 game against each other
+    
+    
+    
+    score = 0
+    for i in range(len(models)):
+        score1, score2 = playGame(payoffs, models[i], modelPlayer, 10)
+        score += score2 
+    score += playGame(payoffs, modelPlayer, modelPlayer, 10)[0]*2 
+    return score
+
+
+
 #First we'll use hill-climbing; should be easier to implement
 def train_hill_climb():
-    #we'll be storing a vector of past 3 game states, and if the other guy has defected AT ALL
-    #128 total states once you've made it past 3 rounds
-    #before then, there's 2^6 states
+    #we'll be storing a vector of past 3 game states, and if the other guy has defected AT ALL (even previous to those three states)
+    #128 total states once you've made it to >= 3 rounds
     #and then 2^4 states
     #and then 2^2 states
     #and then only 1 state at first
-    #so first 128 bits are just the regular states, then next 8 are first 3 states, then next 4 are after 2 moves, then next is after 1 move
-    # curModel = random.getrandbits(213)
-    # def getMove(past_moves, i):
-    #     if i < 3:
-    #         if i == 0:
-    #             return (curModel >> 212) & 1
-    #         if i  == 1:
-    #             encoding = past_moves[0][0]<<1 + past_moves[1][0]
-    #             return ((curModel >> 208) >> encoding) & 1
-    #         if i == 2:
-    #             encoding = past_moves[0][0]
+    #so first 128 bits are just the regular states, next 16 = i == 2, next 4 = i == 1, next 1 = i == 0
+    #128 + 16 + 4 + 1 = 149 total bits 
+    
+    #this is just a training set, we can swap it out with other models
+    models = [Defector(), Cooperator(), GrimTrigger(), RandomChooser(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
+    # models = [Cooperator(), Cooperator(), Cooperator()]
+
+    bestModels = []
+    for _ in range(1): #number of random restarts. After 10 iterations we just return the best model so far
+        curModel = random.getrandbits(149)
+        
+        
+        t = time.time()
+        for _ in range(3000):
+            
+            # print(_)
+            # print(calculateFitness(payoffs, models, ModelPlayer(curModel)))
+            
+            successors = [(curModel, calculateFitness(payoffs, models, ModelPlayer(curModel)))]
+            
+            for i in range(149): #at most we'll hill climb 300 iterations
+                # print(i)
+                # print(curModel)
+                model = curModel ^ (1 << i) #flip 1 bit. This'll generate each successor
+                
+                # print(model)
+                modelPlayer = ModelPlayer(model)
+                fitness = calculateFitness(payoffs=payoffs, models=models, modelPlayer=modelPlayer)
+                successors.append((model, fitness))
+            # print(successors)
+            successors.sort(reverse=True, key=lambda x: x[1])
+            # print(successors[0][1])
+            # print(curModel != successors[0][0])
+            curModel = successors[0][0]
+            
+             
+            
+        # print(bestModels)
+        bestModels.append((curModel, calculateFitness(payoffs, models, ModelPlayer(curModel))))
+    bestModels.sort(reverse=True, key=lambda x: x[1])
+    return bestModels[0]
+
+trained_bin_model, performance = train_hill_climb()
+trained_bin_model = bin(trained_bin_model)
+print(trained_bin_model, performance)
+
+models = [Defector(), Cooperator(), GrimTrigger(), RandomChooser(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), ModelPlayer(int(trained_bin_model[2:], 2))]
+print(calculateAllFitnesses(payoffs, models))
+            
+
+
+
+
 
             
 
 
-models = [Defector(), Cooperator(), GrimTrigger(), RandomChooser(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), ModelPlayer()]
-print(playGame(payoffs, SuspiciousTitForTat(), Defector(), 10))
-t = time.time()
-calculateFitness(payoffs, models)
-print(time.time()-t)
+# models = [Defector(), Cooperator(), GrimTrigger(), RandomChooser(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), ModelPlayer()]
+# print(playGame(payoffs, SuspiciousTitForTat(), Defector(), 10))
+# t = time.time()
+# calculateFitness(payoffs, models)
+# print(time.time()-t)
             
 
     
