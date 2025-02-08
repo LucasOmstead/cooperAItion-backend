@@ -77,14 +77,14 @@ class ModelPlayer(Player):
             if i == 0:
                 return (self.model >> 148) & 1
             if i  == 1:
-                encoding = past_moves[0][0]<<1 + past_moves[1][0]
+                encoding = (past_moves[0][0]<<1) + (past_moves[1][0])
                 return ((self.model >> 144) >> encoding) & 1
             if i == 2:
-                encoding = past_moves[0][i-1]<<3 + past_moves[0][i-2]<<2 + past_moves[1][i-1]<<1 + past_moves[1][i-2]
+                encoding = (past_moves[0][i-1]<<3) + (past_moves[0][i-2]<<2) + (past_moves[1][i-1]<<1) + (past_moves[1][i-2])
                 return ((self.model >> 128) >> encoding) & 1
         else: #i >= 3
-            encoding = int(1 in past_moves[1])<<6 + past_moves[0][i-1]<<5 + past_moves[0][i-2]<<4 + past_moves[0][i-3]<<3 \
-                        + past_moves[1][i-1]<<2 + past_moves[1][i-2]<<1 + past_moves[1][i-3]
+            encoding = (int(1 in past_moves[1])<<6) + (past_moves[0][i-1]<<5) + (past_moves[0][i-2]<<4) + (past_moves[0][i-3]<<3) \
+                        + (past_moves[1][i-1]<<2) + (past_moves[1][i-2]<<1) + past_moves[1][i-3]
             return (self.model >> encoding) & 1    
         
     def get_action(self, past_moves, i):
@@ -154,32 +154,43 @@ def train_hill_climb():
     # models = [Cooperator(), Cooperator(), Cooperator()]
 
     bestModels = []
-    for _ in range(1): #number of random restarts. After 10 iterations we just return the best model so far
+    for _ in range(10): #number of random restarts. After 10 iterations we just return the best model so far
         curModel = random.getrandbits(149)
+        temperature = 100
+        print(_)
+        # print(bestModels)
+        # t = time.time()
         
-        
-        t = time.time()
-        for _ in range(3000):
             
-            # print(_)
-            # print(calculateFitness(payoffs, models, ModelPlayer(curModel)))
-            
+        # print(_)
+        # print(calculateFitness(payoffs, models, ModelPlayer(curModel)))
+        for _ in range(1000):
             successors = [(curModel, calculateFitness(payoffs, models, ModelPlayer(curModel)))]
             
             for i in range(149): #at most we'll hill climb 300 iterations
                 # print(i)
                 # print(curModel)
-                model = curModel ^ (1 << i) #flip 1 bit. This'll generate each successor
+                for j in range(random.randint(1, 10)): #always make at least 1 move, make more as temperature is lower so that you explore more combinations
+                    model = curModel ^ (1 << random.randint(0, 148)) #flip 1 bit. This'll generate each successor
                 
                 # print(model)
                 modelPlayer = ModelPlayer(model)
+
                 fitness = calculateFitness(payoffs=payoffs, models=models, modelPlayer=modelPlayer)
                 successors.append((model, fitness))
+                
             # print(successors)
+            
             successors.sort(reverse=True, key=lambda x: x[1])
-            # print(successors[0][1])
-            # print(curModel != successors[0][0])
-            curModel = successors[0][0]
+            nextModels = [successors[i][0] for i in range(149)]
+            nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(149)]
+        # print(nextWeights)
+        # print(successors[0][1])
+        # print(curModel != successors[0][0])
+
+
+            curModel = random.choices(nextModels, nextWeights)[0]
+            # print(curModel)
             
              
             
@@ -189,10 +200,17 @@ def train_hill_climb():
     return bestModels[0]
 
 trained_bin_model, performance = train_hill_climb()
+print((trained_bin_model>>148)&1, (trained_bin_model>>144)&1, (trained_bin_model>>128)&1)
 trained_bin_model = bin(trained_bin_model)
 print(trained_bin_model, performance)
 
 models = [Defector(), Cooperator(), GrimTrigger(), RandomChooser(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), ModelPlayer(int(trained_bin_model[2:], 2))]
+
+
+
+for i in range(len(models)):
+    print(calculateFitness(payoffs, models[:i] + models[i+1:], models[i]))
+
 print(calculateAllFitnesses(payoffs, models))
             
 
