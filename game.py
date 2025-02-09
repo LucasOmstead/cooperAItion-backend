@@ -9,86 +9,68 @@ a[1] = all moves of 2nd player
 TODO:
 -implement genetic algorithm
 -implement hill-climbing algorithm
--tabu search (use LRU cache for hill-climbing
-)
-
-
-
-
-
+-tabu search (use LRU cache for hill-climbing)
 
 '''
 
 import random
 import time
+from math import e
+from players import Player, Defector, Cooperator, GrimTrigger, RandomChooser, TitForTat, TwoTitForTat, NiceTitForTat, SuspiciousTitForTat, ModelPlayer
 #In general, past_moves[0] = your own moves, past_moves[1] = opponent's moves
-class Player:
-    def __init__(self):
-        self.score = 0
-    
-    def get_action(self, past_moves, i):
-        return 0 
+#region LRUCache
+class Node:
+    def __init__(self, key: int, value: int):
+        self.key = key
+        self.value = value
+        self.prev = None
+        self.next = None
 
-class Defector(Player):
-    def get_action(self, past_moves, i):
-        return 1 
+class LRUCache:
+    def __init__(self, capacity: int):
+        self.capacity = capacity
+        self.keyToNode = {}
+        self.head = Node(-1, -1)
+        self.tail = Node(-1, -1)
+        self.join(self.head, self.tail)
 
-class Cooperator(Player):
-    def get_action(self, past_moves, i):
-        return 0
-    
-class GrimTrigger(Player):
-    def get_action(self, past_moves, i):
-        return 1 if 1 in past_moves[1] else 0
+    def get(self, key: int) -> int:
+        if key not in self.keyToNode:
+            return -1
+        node = self.keyToNode[key]
+        self.remove(node)
+        self.moveToHead(node)
+        return node.value
 
-class RandomChooser(Player):
-    def get_action(self, past_moves, i):
-        return random.choice((0, 1))
+    def put(self, key: int, value: int) -> None:
+        if key in self.keyToNode:
+            node = self.keyToNode[key]
+            node.value = value
+            self.remove(node)
+            self.moveToHead(node)
+            return
 
-class TitForTat(Player):
-    def get_action(self, past_moves, i):
-        if i == 0:
-            return 0
-        return past_moves[1][i-1]
+        if len(self.keyToNode) == self.capacity:
+            lastNode = self.tail.prev
+            del self.keyToNode[lastNode.key]
+            self.remove(lastNode)
 
-class TwoTitForTat(Player):
-    def get_action(self, past_moves, i):
-        if i < 2:
-            return 0
-        return 1 if past_moves[1][i-1] == 1 and past_moves[1][i-2] == 1 else 0 
+        self.moveToHead(Node(key, value))
+        self.keyToNode[key] = self.head.next
 
-class NiceTitForTat(Player):
-    def get_action(self, past_moves, i):
-        if i == 0 or past_moves[1].count(1) / i < .2:
-            return 0 
-        return 1
-    
-class SuspiciousTitForTat(Player):
-    def get_action(self, past_moves, i):
-        if i == 0:
-            return 1
-        return past_moves[1][i-1]
+    def join(self, node1: Node, node2: Node):
+        node1.next = node2
+        node2.prev = node1
 
-class ModelPlayer(Player):
-    def __init__(self, model):
-        self.model = model
-    def get_model_move(self, past_moves, i):
-        if i < 3:
-            if i == 0:
-                return (self.model >> 148) & 1
-            if i  == 1:
-                encoding = (past_moves[0][0]<<1) + (past_moves[1][0])
-                return ((self.model >> 144) >> encoding) & 1
-            if i == 2:
-                encoding = (past_moves[0][i-1]<<3) + (past_moves[0][i-2]<<2) + (past_moves[1][i-1]<<1) + (past_moves[1][i-2])
-                return ((self.model >> 128) >> encoding) & 1
-        else: #i >= 3
-            encoding = (int(1 in past_moves[1])<<6) + (past_moves[0][i-1]<<5) + (past_moves[0][i-2]<<4) + (past_moves[0][i-3]<<3) \
-                        + (past_moves[1][i-1]<<2) + (past_moves[1][i-2]<<1) + past_moves[1][i-3]
-            return (self.model >> encoding) & 1    
-        
-    def get_action(self, past_moves, i):
-        return self.get_model_move(past_moves, i)
+    def moveToHead(self, node: Node):
+        self.join(node, self.head.next)
+        self.join(self.head, node)
+
+    def remove(self, node: Node):
+        self.join(node.prev, node.next)
+
+
+
 
 cooperateReward = (5, 5)
 betrayalReward = (8, 0)
@@ -99,7 +81,7 @@ bothBetray = (2, 2)
 payoffs = [[cooperateReward[0], betrayedReward[0]], 
              [betrayalReward[0], bothBetray[0]]]
 
-
+        
 def playGame(payoffs, player1: Player, player2: Player, numRounds: int):
     score1 = 0
     score2 = 0
@@ -140,7 +122,7 @@ def calculateFitness(payoffs, models, modelPlayer):
 
 
 #First we'll use hill-climbing; should be easier to implement
-def train_hill_climb():
+def train_hill_climb(numRestarts: int, numIterations: int):
     #we'll be storing a vector of past 3 game states, and if the other guy has defected AT ALL (even previous to those three states)
     #128 total states once you've made it to >= 3 rounds
     #and then 2^4 states
@@ -154,17 +136,11 @@ def train_hill_climb():
     # models = [Cooperator(), Cooperator(), Cooperator()]
 
     bestModels = []
-    for _ in range(10): #number of random restarts. After 10 iterations we just return the best model so far
+    for _ in range(numRestarts): #number of random restarts. After 10 iterations we just return the best model so far
         curModel = random.getrandbits(149)
-        temperature = 100
-        print(_)
-        # print(bestModels)
-        # t = time.time()
         
-            
-        # print(_)
-        # print(calculateFitness(payoffs, models, ModelPlayer(curModel)))
-        for _ in range(1000):
+        #print(_)
+        for i in range(numIterations):
             successors = [(curModel, calculateFitness(payoffs, models, ModelPlayer(curModel)))]
             
             for i in range(149): #at most we'll hill climb 300 iterations
@@ -184,9 +160,7 @@ def train_hill_climb():
             successors.sort(reverse=True, key=lambda x: x[1])
             nextModels = [successors[i][0] for i in range(149)]
             nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(149)]
-        # print(nextWeights)
-        # print(successors[0][1])
-        # print(curModel != successors[0][0])
+        
 
 
             curModel = random.choices(nextModels, nextWeights)[0]
@@ -199,33 +173,132 @@ def train_hill_climb():
     bestModels.sort(reverse=True, key=lambda x: x[1])
     return bestModels[0]
 
-trained_bin_model, performance = train_hill_climb()
-print((trained_bin_model>>148)&1, (trained_bin_model>>144)&1, (trained_bin_model>>128)&1)
+def train_hill_climb_tabu(numRestarts: int, numIterations: int):
+    
+    #we'll be storing a vector of past 3 game states, and if the other guy has defected AT ALL (even previous to those three states)
+    #128 total states once you've made it to >= 3 rounds
+    #and then 2^4 states
+    #and then 2^2 states
+    #and then only 1 state at first
+    #so first 128 bits are just the regular states, next 16 = i == 2, next 4 = i == 1, next 1 = i == 0
+    #128 + 16 + 4 + 1 = 149 total bits 
+    
+    #this is just a training set, we can swap it out with other models
+    models = [Defector(), Cooperator(), GrimTrigger(), RandomChooser(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
+    # models = [Cooperator(), Cooperator(), Cooperator()]
+
+    bestModels = []
+    
+    
+    visitedStates = LRUCache(10000)
+    for _ in range(numRestarts): #number of random restarts. After 10 iterations we just return the best model so far
+        curModel = random.getrandbits(149)
+        visitedStates.put(curModel, curModel)
+        
+        # print(_)
+        for i in range(numIterations):
+
+            successors = [(curModel, calculateFitness(payoffs, models, ModelPlayer(curModel)))]
+            
+            for i in range(149): #at most we'll hill climb 300 iterations
+                # print(i)
+                # print(curModel)
+                
+                for j in range(random.randint(1, 10)): #always make at least 1 move, make more as temperature is lower so that you explore more combinations
+                    model = curModel ^ (1 << random.randint(0, 148)) #flip 1 bit. This'll generate each successor
+                while model in visitedStates.keyToNode:
+                    for j in range(random.randint(1, 10)): #always make at least 1 move, make more as temperature is lower so that you explore more combinations
+                        model = model ^ (1 << random.randint(0, 148))
+                    
+                # print(visitedStates.keyToNode)
+                visitedStates.put(model, model)
+                # print(model)
+                modelPlayer = ModelPlayer(model)
+
+                fitness = calculateFitness(payoffs=payoffs, models=models, modelPlayer=modelPlayer)
+                successors.append((model, fitness))
+                
+            # print(successors)
+            
+            successors.sort(reverse=True, key=lambda x: x[1])
+            nextModels = [successors[i][0] for i in range(149)]
+            nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(149)]
+        
+
+
+            curModel = random.choices(nextModels, nextWeights)[0]
+            # print(curModel)
+            
+             
+            
+        # print(bestModels)
+        bestModels.append((curModel, calculateFitness(payoffs, models, ModelPlayer(curModel))))
+    bestModels.sort(reverse=True, key=lambda x: x[1])
+    
+    return bestModels[0]
+
+def train_simulated_annealing(numRestarts, temperature):
+    #generate a successor state. If better take it, otherwise don't
+    curModel = random.getrandbits(149)
+    models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
+    bestGlobal = curModel 
+    bestGlobalFitness = calculateFitness(payoffs, models, ModelPlayer(curModel))
+    for _ in range(numRestarts):
+        
+            
+        curModel = random.getrandbits(149)
+        t = temperature
+        while t > .1:
+            # if random.randint(1, 1000) == 1:
+            #     print(t)
+            #     print(calculateFitness(payoffs, models, ModelPlayer(curModel)))
+                
+            nextModel = curModel 
+            for i in range(random.randint(1, 10)):
+                nextModel = nextModel ^ (1 << random.randint(1, 148))
+            curModelFitness = calculateFitness(payoffs, models, ModelPlayer(curModel))
+            nextModelFitness = calculateFitness(payoffs, models, ModelPlayer(nextModel))
+            if nextModelFitness > bestGlobalFitness:
+                bestGlobal = nextModel 
+                bestGlobalFitness = nextModelFitness
+                ''' #this is for when you have a Random player
+                fitnesses = [] #to get rid of outliers from Random model
+                for i in range(10):
+                    fitnesses.append(calculateFitness(payoffs, models, ModelPlayer(nextModel)))
+                if sum(fitnesses)//10 > bestGlobalFitness:
+                    bestGlobal = curModel
+                    bestGlobalFitness = sum(fitnesses)//10
+                '''
+            if nextModelFitness >= curModelFitness:
+                curModel = nextModel 
+            else:
+                probChoose = e**(nextModelFitness-curModelFitness)
+                curModel = random.choices([curModel, nextModel], [1-probChoose, probChoose])[0]
+            t *= .99
+    return (bestGlobal, calculateFitness(payoffs, models, ModelPlayer(bestGlobal)))
+
+print("Annealing model:")
+annealing_model = train_simulated_annealing(100, 100)
+models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), ModelPlayer(annealing_model[0])]
+print(annealing_model)
+print("Annealing model fitnesses:")
+print(calculateAllFitnesses(payoffs, models))
+
+ 
+    
+print("Tabu search model: ")
+trained_bin_model, performance = train_hill_climb_tabu(10, 250)
 trained_bin_model = bin(trained_bin_model)
 print(trained_bin_model, performance)
-
-models = [Defector(), Cooperator(), GrimTrigger(), RandomChooser(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), ModelPlayer(int(trained_bin_model[2:], 2))]
-
-
-
-for i in range(len(models)):
-    print(calculateFitness(payoffs, models[:i] + models[i+1:], models[i]))
-
+print("Tabu search model fitnesses:")
+models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), ModelPlayer(int(trained_bin_model[2:], 2))]
 print(calculateAllFitnesses(payoffs, models))
-            
+# print((trained_bin_model>>148)&1, (trained_bin_model>>144)&1, (trained_bin_model>>128)&1) #prints what happens with no defections - usually 0 0 0            
 
 
 
 
 
-            
-
-
-# models = [Defector(), Cooperator(), GrimTrigger(), RandomChooser(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), ModelPlayer()]
-# print(playGame(payoffs, SuspiciousTitForTat(), Defector(), 10))
-# t = time.time()
-# calculateFitness(payoffs, models)
-# print(time.time()-t)
             
 
     
