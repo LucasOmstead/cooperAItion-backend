@@ -78,3 +78,11 @@ class ModelPlayer(Player):
         
     def get_action(self, past_moves, i):
         return self.get_model_move(past_moves, i)
+    
+
+'''
+bit string in the form: (2^0bits)(2^2bits)(2^4bits)(2^7bits) =  since your first move and opponents is acting as a selector
+then we have 4 possibilites for you and 4 for opponent hence we have to select between 16
+
+total = 149
+'''

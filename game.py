@@ -15,7 +15,7 @@ TODO:
 
 import random
 import time
-from math import e
+from math import e, ceil
 from players import Player, Defector, Cooperator, GrimTrigger, RandomChooser, TitForTat, TwoTitForTat, NiceTitForTat, SuspiciousTitForTat, ModelPlayer
 #In general, past_moves[0] = your own moves, past_moves[1] = opponent's moves
 #region LRUCache
@@ -77,6 +77,8 @@ bothBetray = (2, 2)
 
 payoffs = [[cooperateReward[0], betrayedReward[0]], 
              [betrayalReward[0], bothBetray[0]]]
+
+payoffs2 = [[-1, -5], [0, -3]]
 
         
 def playGame(payoffs, player1: Player, player2: Player, numRounds: int):
@@ -251,13 +253,140 @@ def train_simulated_annealing(numRestarts, temperature, successor, models, payof
     return (bestGlobal, calculateFitness(payoffs, models, ModelPlayer(bestGlobal)))
 
 
+# function for training a model that plays the prisoners dilemma based on the basic genetic algorithm seen in class notes
+# requires: initial population size of the algorithm, number of iterations for creating a new generation, amount of parents we
+# want for the next generation to be created(percentForCrossover), payoffs are the scores for each action based on column row formatting
+# models will be the basic models we created
+def train_basic_genetic(initialPopulationSize, numIterations, percentForCrossover, models, payoffs):
+    #randomly generated population
+    population = [random.getrandbits(149) for _ in range(initialPopulationSize)]
+    bestGlobal = None
+    #calculate the # of successors we are going to be generating
+    sizeForChoosing = max(ceil(initialPopulationSize*percentForCrossover), 2)
+
+    for _ in range(numIterations):
+        #calculate fitness for all generated models
+        fitnessForAll = [(population[i], calculateFitness(payoffs, models, ModelPlayer(population[i]))) for i in range(len(population))]
+        #sort based on the best fitnesses
+        fitnessForAll.sort(reverse=True, key=lambda x: x[1])
+
+        #update best model ever seen 
+        bestGlobal = bestGlobal if bestGlobal is not None and bestGlobal[1] > fitnessForAll[0][1] else fitnessForAll[0]
+
+        #choose top percent of the models
+        topPercentFitness = fitnessForAll[:sizeForChoosing]
+        
+        #Calculate probability of those models being chosen
+        sumOfTopPercent = sum(child[1] for child in topPercentFitness)
+        probabilityForTopPercent = [child[1]/sumOfTopPercent for child in topPercentFitness]
+
+        #generate a new population based on a random crossover point and 2 chosen parents 
+        newPopulation = []
+        for _ in range(initialPopulationSize):
+            parents = random.choices(topPercentFitness, weights=probabilityForTopPercent, k=2)
+            crossoverPoint = random.choices([i for i in range(1, 148)], k=1)[0]
+            newParent = ((parents[0][0] >> crossoverPoint) << crossoverPoint) + (parents[1][0] & (2**(crossoverPoint) - 1))
+
+            newPopulation.append(newParent)
+        
+        population = newPopulation
+    
+    return bestGlobal
+            
+        
+
+# function for training a model that plays the prisoners dilemma based on the basic genetic algorithm seen in class notes
+# will try a random mutation with mutationCount number of times
+def train_basic_genetic_mutation(initialPopulationSize, numIterations, percentForCrossover, mutationPercent, mutationCount, models, payoffs):
+    #randomly generated population
+    population = [random.getrandbits(149) for _ in range(initialPopulationSize)]
+    bestGlobal = None
+    #calculate the # of successors we are going to be generating
+    sizeForChoosing = max(ceil(initialPopulationSize*percentForCrossover), 2)
+
+    for _ in range(numIterations):
+        #calculate fitness for all generated models
+        fitnessForAll = [(population[i], calculateFitness(payoffs, models, ModelPlayer(population[i]))) for i in range(len(population))]
+        #sort based on the best fitnesses
+        fitnessForAll.sort(reverse=True, key=lambda x: x[1])
+
+        #update best model ever seen 
+        bestGlobal = bestGlobal if bestGlobal is not None and bestGlobal[1] > fitnessForAll[0][1] else fitnessForAll[0]
+
+        #choose top percent of the models
+        topPercentFitness = fitnessForAll[:sizeForChoosing]
+        
+        #Calculate probability of those models being chosen
+        sumOfTopPercent = sum(child[1] for child in topPercentFitness)
+        probabilityForTopPercent = [child[1]/sumOfTopPercent for child in topPercentFitness]
+
+        #generate a new population based on a random crossover point and 2 chosen parents 
+        newPopulation = []
+        for _ in range(initialPopulationSize):
+            parents = random.choices(topPercentFitness, weights=probabilityForTopPercent, k=2)
+            crossoverPoint = random.choices([i for i in range(1, 148)], k=1)[0]
+            newParent = ((parents[0][0] >> crossoverPoint) << crossoverPoint) + (parents[1][0] & (2**(crossoverPoint) - 1))
+
+            #mutates mutationCount number of times
+            for _ in range(mutationCount):
+                willMutate = random.choices([True, False], [mutationPercent, 1-mutationPercent])[0]
+
+                if(willMutate):
+                    mutationPoint = random.choices([i for i in range(0, 149)], k=1)[0]
+                    newParent = newParent ^ (1 << mutationPoint)
+
+            newPopulation.append(newParent)
+
+        population = newPopulation
+    
+    return bestGlobal
+
+def local_beam_search(numIterations: int, k: int, successor, models, payoffs):
+    kBestModels = []
+    
+    #generate k models to start search from 
+    for _ in range(k):
+        newModel = random.getrandbits(149)
+        fitness = calculateFitness(payoffs=payoffs, models=models, modelPlayer=ModelPlayer(newModel))
+        kBestModels.append((newModel, fitness))
+
+    #take the best found
+    kBestModels.sort(reverse=True, key=lambda x: x[1])
+    bestModelFound = kBestModels[0]
+
+    #number of times of expansion of the k best models
+    for _ in range(numIterations):
+        successors = []
+        for currModel in kBestModels:
+            for _ in range(100):
+                model = successor(currModel[0])
+
+                modelPlayer = ModelPlayer(model)
+                
+                fitness = calculateFitness(payoffs=payoffs, models=models, modelPlayer=modelPlayer)
+                successors.append((model, fitness))
+        
+        successors.sort(reverse=True, key=lambda x: x[1])
+        kBestModels = [successors[i] for i in range(k)]
+        bestModelFound = bestModelFound if bestModelFound[1] >= kBestModels[0][1] else kBestModels[0]
+    
+    return bestModelFound
+            
+
+
+
 # print("Annealing model:")
-# annealing_model = train_simulated_annealing(10, 100, successor, [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()])
+# annealing_model = train_simulated_annealing(10, 100, successor, [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()], payoffs=payoffs)
 # models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), ModelPlayer(annealing_model[0])]
 # print(bin(annealing_model[0]), annealing_model[1])
 # print("Annealing model fitnesses:")
 # print(calculateAllFitnesses(payoffs, models))
 
+#(5, 5), (8, 0), (0, 8), (2, 2)
+#payoffs[yourAction][hisAction] = yourPayoff
+#0 cooperate and 1 is defect
+#(1,1), (0, 5), (5,0), (3,3)
+#payoffs = [[1, 0], [5, 3]]
  
     
 # print("Tabu search model: ")
@@ -271,10 +400,23 @@ def train_simulated_annealing(numRestarts, temperature, successor, models, payof
 
 
 
+# print("Basic Genetic Model:")
+# genetic_model = train_basic_genetic(15, 40, 0.1, [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()], payoffs=payoffs)
+# models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), ModelPlayer(genetic_model[0])]
+# print(bin(genetic_model[0]), genetic_model[1])
+# print("Basic Genetic Model Fitnesses:")
+# print(calculateAllFitnesses(payoffs, models))
 
+# print("Mutation Genetic Model:")
+# genetic_model = train_basic_genetic_mutation(50, 30, 0.2, 0.1, 5, [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()], payoffs=payoffs)
+# models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), ModelPlayer(genetic_model[0])]
+# print(bin(genetic_model[0]), genetic_model[1])
+# print("Mutation Genetic Model Fitnesses:")
+# print(calculateAllFitnesses(payoffs, models))
 
-            
-
-    
-
-
+# print("Local Beam Model:")
+# local_beam_model = local_beam_search(10, 5, successor=successor, models=[Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()], payoffs=payoffs)
+# models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), ModelPlayer(local_beam_model[0])]
+# print(bin(local_beam_model[0]), local_beam_model[1])
+# print("Local Beam Model Fitnesses:")
+# print(calculateAllFitnesses(payoffs, models))
