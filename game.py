@@ -16,7 +16,7 @@ TODO:
 import random
 import time
 from math import e, ceil
-from players import Player, Defector, Cooperator, GrimTrigger, RandomChooser, TitForTat, TwoTitForTat, NiceTitForTat, SuspiciousTitForTat, ModelPlayer
+from players import Player, Defector, Cooperator, GrimTrigger, RandomChooser, TitForTat, TwoTitForTat, NiceTitForTat, SuspiciousTitForTat, myModels
 #In general, past_moves[0] = your own moves, past_moves[1] = opponent's moves
 #region LRUCache
 class Node:
@@ -116,28 +116,29 @@ def calculateFitness(payoffs, models, modelPlayer):
     score += playGame(payoffs, modelPlayer, modelPlayer, 10)[0]
     return score
 
-def successor(model):
-    for i in range(random.randint(1, 10)):
-        model = model ^ (1 << random.randint(0, 148))
+def successor(model, memSize):
+    for _ in range(random.randint(1, 10)):
+        model = model ^ (1 << random.randint(0, memSize-1))
     return model
 
 #First we'll use hill-climbing; should be easier to implement
-def train_hill_climb(numRestarts: int, numIterations: int, successor):
+def train_hill_climb(numRestarts: int, numIterations: int, successor, memSize):
     models = [Defector(), Cooperator(), GrimTrigger(), RandomChooser(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
-    # models = [Cooperator(), Cooperator(), Cooperator()]
 
     bestModels = []
+    ModelPlayer = myModels[memSize]
+
     for _ in range(numRestarts): #number of random restarts. After 10 iterations we just return the best model so far
-        curModel = random.getrandbits(149)
+        curModel = random.getrandbits(memSize)
         
         #print(_)
         for i in range(numIterations):
             successors = [(curModel, calculateFitness(payoffs, models, ModelPlayer(curModel)))]
             
-            for i in range(149): #at most we'll hill climb 300 iterations
+            for i in range(2*memSize): #at most we'll hill climb 300 iterations
                 # print(i)
                 # print(curModel)
-                model = successor(curModel)
+                model = successor(curModel, memSize)
                 
                 # print(model)
                 modelPlayer = ModelPlayer(model)
@@ -148,22 +149,20 @@ def train_hill_climb(numRestarts: int, numIterations: int, successor):
             # print(successors)
             
             successors.sort(reverse=True, key=lambda x: x[1])
-            nextModels = [successors[i][0] for i in range(149)]
-            nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(149)]
+            nextModels = [successors[i][0] for i in range(memSize)]
+            nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(memSize)]
         
 
 
             curModel = random.choices(nextModels, nextWeights)[0]
             # print(curModel)
             
-             
-            
         # print(bestModels)
         bestModels.append((curModel, calculateFitness(payoffs, models, ModelPlayer(curModel))))
     bestModels.sort(reverse=True, key=lambda x: x[1])
     return bestModels[0]
 
-def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor):
+def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor, memSize):
     
     #we'll be storing a vector of past 3 game states, and if the other guy has defected AT ALL (even previous to those three states)
     #128 total states once you've made it to >= 3 rounds
@@ -178,11 +177,11 @@ def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor):
     # models = [Cooperator(), Cooperator(), Cooperator()]
 
     bestModels = []
-    
+    ModelPlayer = myModels[memSize]
     
     visitedStates = LRUCache(10000)
     for _ in range(numRestarts): #number of random restarts. After 10 iterations we just return the best model so far
-        curModel = random.getrandbits(149)
+        curModel = random.getrandbits(memSize)
         visitedStates.put(curModel, curModel)
         
         # print(_)
@@ -190,13 +189,13 @@ def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor):
 
             successors = [(curModel, calculateFitness(payoffs, models, ModelPlayer(curModel)))]
             
-            for i in range(149): #at most we'll hill climb 300 iterations
+            for i in range(2*memSize): #at most we'll hill climb 300 iterations
                 # print(i)
                 # print(curModel)
                 
                 model = successor(curModel)
                 while model in visitedStates.keyToNode:
-                    model = successor(model)
+                    model = successor(model, memSize)
                     
                 visitedStates.put(model, model)
                 
@@ -208,8 +207,8 @@ def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor):
             
             
             successors.sort(reverse=True, key=lambda x: x[1])
-            nextModels = [successors[i][0] for i in range(149)]
-            nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(149)]
+            nextModels = [successors[i][0] for i in range(memSize)]
+            nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(memSize)]
         
 
 
@@ -224,18 +223,19 @@ def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor):
     
     return bestModels[0]
 
-def train_simulated_annealing(numRestarts, temperature, successor, models, payoffs):
+def train_simulated_annealing(numRestarts, temperature, successor, models, payoffs, memSize):
     #generate a successor state. If better take it, otherwise don't
-    curModel = random.getrandbits(149)
+    curModel = random.getrandbits(memSize)
 
     bestGlobal = curModel 
+    ModelPlayer = myModels[memSize]
     bestGlobalFitness = calculateFitness(payoffs, models, ModelPlayer(curModel))
     for _ in range(numRestarts):
-        curModel = random.getrandbits(149)
+        curModel = random.getrandbits(memSize)
         t = temperature
         while t > .1:
             
-            nextModel = successor(curModel)
+            nextModel = successor(curModel, memSize)
             curModelFitness = calculateFitness(payoffs, models, ModelPlayer(curModel))
             nextModelFitness = calculateFitness(payoffs, models, ModelPlayer(nextModel))
 
@@ -257,12 +257,13 @@ def train_simulated_annealing(numRestarts, temperature, successor, models, payof
 # requires: initial population size of the algorithm, number of iterations for creating a new generation, amount of parents we
 # want for the next generation to be created(percentForCrossover), payoffs are the scores for each action based on column row formatting
 # models will be the basic models we created
-def train_basic_genetic(initialPopulationSize, numIterations, percentForCrossover, models, payoffs):
+def train_basic_genetic(initialPopulationSize, numIterations, percentForCrossover, models, payoffs, memSize):
     #randomly generated population
-    population = [random.getrandbits(149) for _ in range(initialPopulationSize)]
+    population = [random.getrandbits(memSize) for _ in range(initialPopulationSize)]
     bestGlobal = None
     #calculate the # of successors we are going to be generating
     sizeForChoosing = max(ceil(initialPopulationSize*percentForCrossover), 2)
+    ModelPlayer = myModels[memSize]
 
     for _ in range(numIterations):
         #calculate fitness for all generated models
@@ -284,7 +285,7 @@ def train_basic_genetic(initialPopulationSize, numIterations, percentForCrossove
         newPopulation = []
         for _ in range(initialPopulationSize):
             parents = random.choices(topPercentFitness, weights=probabilityForTopPercent, k=2)
-            crossoverPoint = random.choices([i for i in range(1, 148)], k=1)[0]
+            crossoverPoint = random.choices([i for i in range(1, memSize-1)], k=1)[0]
             newParent = ((parents[0][0] >> crossoverPoint) << crossoverPoint) + (parents[1][0] & (2**(crossoverPoint) - 1))
 
             newPopulation.append(newParent)
@@ -297,12 +298,13 @@ def train_basic_genetic(initialPopulationSize, numIterations, percentForCrossove
 
 # function for training a model that plays the prisoners dilemma based on the basic genetic algorithm seen in class notes
 # will try a random mutation with mutationCount number of times
-def train_basic_genetic_mutation(initialPopulationSize, numIterations, percentForCrossover, mutationPercent, mutationCount, models, payoffs):
+def train_basic_genetic_mutation(initialPopulationSize, numIterations, percentForCrossover, mutationPercent, mutationCount, models, payoffs, memSize):
     #randomly generated population
     population = [random.getrandbits(149) for _ in range(initialPopulationSize)]
     bestGlobal = None
     #calculate the # of successors we are going to be generating
     sizeForChoosing = max(ceil(initialPopulationSize*percentForCrossover), 2)
+    ModelPlayer = myModels[memSize]
 
     for _ in range(numIterations):
         #calculate fitness for all generated models
@@ -324,7 +326,7 @@ def train_basic_genetic_mutation(initialPopulationSize, numIterations, percentFo
         newPopulation = []
         for _ in range(initialPopulationSize):
             parents = random.choices(topPercentFitness, weights=probabilityForTopPercent, k=2)
-            crossoverPoint = random.choices([i for i in range(1, 148)], k=1)[0]
+            crossoverPoint = random.choices([i for i in range(1, memSize-1)], k=1)[0]
             newParent = ((parents[0][0] >> crossoverPoint) << crossoverPoint) + (parents[1][0] & (2**(crossoverPoint) - 1))
 
             #mutates mutationCount number of times
@@ -332,7 +334,7 @@ def train_basic_genetic_mutation(initialPopulationSize, numIterations, percentFo
                 willMutate = random.choices([True, False], [mutationPercent, 1-mutationPercent])[0]
 
                 if(willMutate):
-                    mutationPoint = random.choices([i for i in range(0, 149)], k=1)[0]
+                    mutationPoint = random.choices([i for i in range(0, memSize)], k=1)[0]
                     newParent = newParent ^ (1 << mutationPoint)
 
             newPopulation.append(newParent)
@@ -341,12 +343,13 @@ def train_basic_genetic_mutation(initialPopulationSize, numIterations, percentFo
     
     return bestGlobal
 
-def local_beam_search(numIterations: int, k: int, successor, models, payoffs):
+def local_beam_search(numIterations: int, k: int, successor, models, payoffs, memSize):
     kBestModels = []
+    ModelPlayer = myModels[memSize]
     
     #generate k models to start search from 
     for _ in range(k):
-        newModel = random.getrandbits(149)
+        newModel = random.getrandbits(memSize)
         fitness = calculateFitness(payoffs=payoffs, models=models, modelPlayer=ModelPlayer(newModel))
         kBestModels.append((newModel, fitness))
 
