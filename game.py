@@ -22,7 +22,7 @@ from players import Player, Defector, Cooperator, GrimTrigger, RandomChooser, Ti
 class Node:
     def __init__(self, key: int, value: int):
         self.key = key
-        self.value = value
+        self.value = value 
         self.prev = None
         self.next = None
 
@@ -68,17 +68,6 @@ class LRUCache:
 
     def remove(self, node: Node):
         self.join(node.prev, node.next)
-
-cooperateReward = (5, 5)
-betrayalReward = (8, 0)
-betrayedReward = (0, 8)
-bothBetray = (2, 2)
-#payoffmatrix[player1choice][player2choice] = reward for player1, player2
-
-payoffs = [[cooperateReward[0], betrayedReward[0]], 
-             [betrayalReward[0], bothBetray[0]]]
-
-payoffs2 = [[-1, -5], [0, -3]]
 
         
 def playGame(payoffs, player1: Player, player2: Player, numRounds: int):
@@ -162,7 +151,7 @@ def train_hill_climb(numRestarts: int, numIterations: int, successor, memSize):
     bestModels.sort(reverse=True, key=lambda x: x[1])
     return bestModels[0]
 
-def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor, memSize):
+def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor, memSize, numberOfSuccessors):
     
     #we'll be storing a vector of past 3 game states, and if the other guy has defected AT ALL (even previous to those three states)
     #128 total states once you've made it to >= 3 rounds
@@ -189,11 +178,11 @@ def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor, memSi
 
             successors = [(curModel, calculateFitness(payoffs, models, ModelPlayer(curModel)))]
             
-            for i in range(2*memSize): #at most we'll hill climb 300 iterations
+            for i in range(numberOfSuccessors): #at most we'll hill climb 300 iterations
                 # print(i)
                 # print(curModel)
                 
-                model = successor(curModel)
+                model = successor(curModel, memSize)
                 while model in visitedStates.keyToNode:
                     model = successor(model, memSize)
                     
@@ -207,15 +196,12 @@ def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor, memSi
             
             
             successors.sort(reverse=True, key=lambda x: x[1])
-            nextModels = [successors[i][0] for i in range(memSize)]
-            nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(memSize)]
+            nextModels = [successors[i][0] for i in range(numberOfSuccessors)]
+            nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(numberOfSuccessors)]
         
 
 
             curModel = random.choices(nextModels, nextWeights)[0]
-            
-            
-             
             
         
         bestModels.append((curModel, calculateFitness(payoffs, models, ModelPlayer(curModel))))
@@ -250,6 +236,7 @@ def train_simulated_annealing(numRestarts, temperature, successor, models, payof
                 #4 possibilities for the first move: CC, CD, DC, DD
                 #1st move can have 4 possibilities, 2nd move can have 4 possibilities 4 x 4 = 16
             t *= .99
+
     return (bestGlobal, calculateFitness(payoffs, models, ModelPlayer(bestGlobal)))
 
 
@@ -300,7 +287,7 @@ def train_basic_genetic(initialPopulationSize, numIterations, percentForCrossove
 # will try a random mutation with mutationCount number of times
 def train_basic_genetic_mutation(initialPopulationSize, numIterations, percentForCrossover, mutationPercent, mutationCount, models, payoffs, memSize):
     #randomly generated population
-    population = [random.getrandbits(149) for _ in range(initialPopulationSize)]
+    population = [random.getrandbits(memSize) for _ in range(initialPopulationSize)]
     bestGlobal = None
     #calculate the # of successors we are going to be generating
     sizeForChoosing = max(ceil(initialPopulationSize*percentForCrossover), 2)
@@ -375,29 +362,39 @@ def local_beam_search(numIterations: int, k: int, successor, models, payoffs, me
     
     return bestModelFound
             
+cooperateReward = (5, 5)
+betrayalReward = (8, 0)
+betrayedReward = (0, 8)
+bothBetray = (2, 2)
+#payoffmatrix[player1choice][player2choice] = reward for player1, player2
 
+payoffs = [[cooperateReward[0], betrayedReward[0]], 
+             [betrayalReward[0], bothBetray[0]]]
 
+payoffs2 = [[-1, -5], [0, -3]]
+memorySize = 149
+baseLineModels = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
 
-# print("Annealing model:")
-# annealing_model = train_simulated_annealing(10, 100, successor, [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()], payoffs=payoffs)
-# models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), ModelPlayer(annealing_model[0])]
-# print(bin(annealing_model[0]), annealing_model[1])
-# print("Annealing model fitnesses:")
-# print(calculateAllFitnesses(payoffs, models))
+print("Annealing model:")
+annealing_model = train_simulated_annealing(1, 0.2, successor, baseLineModels, payoffs=payoffs, memSize=memorySize)
+models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), myModels[memorySize](annealing_model[0])]
+print(bin(annealing_model[0]), annealing_model[1])
+print("Annealing model fitnesses:")
+print(calculateAllFitnesses(payoffs, models))
 
-#(5, 5), (8, 0), (0, 8), (2, 2)
-#payoffs[yourAction][hisAction] = yourPayoff
-#0 cooperate and 1 is defect
-#(1,1), (0, 5), (5,0), (3,3)
-#payoffs = [[1, 0], [5, 3]]
+# (5, 5), (8, 0), (0, 8), (2, 2)
+# payoffs[yourAction][hisAction] = yourPayoff
+# 0 cooperate and 1 is defect
+# (1,1), (0, 5), (5,0), (3,3)
+# payoffs = [[1, 0], [5, 3]]
  
     
 # print("Tabu search model: ")
-# trained_bin_model, performance = train_hill_climb_tabu(50, 25, successor)
+# trained_bin_model, performance = train_hill_climb_tabu(5, 10, successor, memSize=memorySize, numberOfSuccessors=30)
 # trained_bin_model = bin(trained_bin_model)
 # print(trained_bin_model, performance)
 # print("Tabu search model fitnesses:")
-# models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), ModelPlayer(int(trained_bin_model[2:], 2))]
+# models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), myModels[memorySize](int(trained_bin_model[2:], 2))]
 # print(calculateAllFitnesses(payoffs, models))
 # # print((trained_bin_model>>148)&1, (trained_bin_model>>144)&1, (trained_bin_model>>128)&1) #prints what happens with no defections - usually 0 0 0            
 
