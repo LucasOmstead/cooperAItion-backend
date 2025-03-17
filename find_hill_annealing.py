@@ -2,7 +2,7 @@ import csv
 import time
 import random
 from math import e, ceil
-from game import train_simulated_annealing, train_hill_climb, calculateAllFitnesses, successor, playGame
+from game import train_simulated_annealing, train_hill_climb, calculateAllFitnesses, successor, playGame, train_hill_climb_tabu
 from players import myModels, Defector, Cooperator, GrimTrigger, TitForTat, TwoTitForTat, NiceTitForTat, SuspiciousTitForTat
 
 def head_to_head(player1, player2, payoffs, minRounds=50, maxRounds=200, numMatches=20):
@@ -55,7 +55,14 @@ def run_experiment_for_config(method, params, num_trials, payoffs, memSize, base
                 successor,
                 memSize
             )
-        # Add other methods as needed
+        elif method == 'tabu_search':
+            best_model, fitness = train_hill_climb_tabu(
+                params['numRestarts'],
+                params['numIterations'],
+                successor,
+                memSize,
+                params['tabuSize']
+            )
 
         end_time = time.perf_counter()
         elapsed = end_time - start_time
@@ -87,9 +94,11 @@ def run_experiments(method, param_configs, num_trials, payoffs, memSize, baseLin
     """Run experiments for multiple parameter configurations.
     Returns a list of results."""
     all_results = []
-    for config_id, params in param_configs.items():
+    global config_id
+    for params in param_configs:
         results = run_experiment_for_config(method, params, num_trials, payoffs, memSize, baseLineModels, config_id)
         all_results.extend(results)
+        config_id += 1
     return all_results
 
 def run_experiments_over_memories(method, param_configs, num_trials, payoffs, memory_sizes, baseLineModels):
@@ -102,15 +111,15 @@ def run_experiments_over_memories(method, param_configs, num_trials, payoffs, me
     return all_results
 
 # Set up payoff parameters as provided
-cooperateReward = (5, 5)
-betrayalReward = (8, 0)
-betrayedReward = (0, 8)
-bothBetray = (2, 2)
-payoffs = [
-    [cooperateReward[0], betrayedReward[0]],
-    [betrayalReward[0], bothBetray[0]]
-]
-payoffs2 = [[3, 0], [5, 1]]
+# cooperateReward = (5, 5)
+# betrayalReward = (8, 0)
+# betrayedReward = (0, 8)
+# bothBetray = (2, 2)
+# payoffs = [
+#     [cooperateReward[0], betrayedReward[0]],
+#     [betrayalReward[0], bothBetray[0]]
+# ]
+payoffs = [[3, 0], [5, 1]]
 
 # Define baseline models
 baseLineModels = [
@@ -128,29 +137,25 @@ baseLineModels = [
 numRestarts_values_SA = [1, 2, 3, 4, 5]
 temperature_values = [0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45]
 
-param_configs_SA = {}
+# Define a list of memory sizes to test
+memory_sizes = [21, 85, 149]
 config_id = 1
+# Instead of using a dict, build a list of parameter configurations for SA.
+param_configs_SA = []
 for nr in numRestarts_values_SA:
     for temp in temperature_values:
-        key = f'config_{config_id}'
-        param_configs_SA[key] = {'numRestarts': nr, 'temperature': temp}
-        config_id += 1
+        param_configs_SA.append({'numRestarts': nr, 'temperature': temp})
+
 
 # Define parameter configurations for hill climbing.
 # For hill climbing, we vary numRestarts and numIterations.
 numRestarts_values_HC = [1, 2, 3, 4, 5]
 numIterations_values = [10, 20, 30, 40, 50]
 
-param_configs_HC = {}
-config_id = 1
+param_configs_HC = []
 for nr in numRestarts_values_HC:
     for iters in numIterations_values:
-        key = f'config_{config_id}'
-        param_configs_HC[key] = {'numRestarts': nr, 'numIterations': iters}
-        config_id += 1
-
-# Define a list of memory sizes to test
-memory_sizes = [21, 85, 149]
+        param_configs_HC.append({'numRestarts': nr, 'numIterations': iters})
 
 # Run experiments for simulated annealing over multiple memory sizes
 results_SA = run_experiments_over_memories('simulated_annealing', param_configs_SA,
@@ -170,11 +175,11 @@ results_HC = run_experiments_over_memories('hill_climb', param_configs_HC,
 all_results = results_SA + results_HC
 
 # Save the results to CSV
-with open('experiment_results.csv', mode='w', newline='') as csvfile:
+with open('hill_annealing.csv', mode='w', newline='') as csvfile:
     fieldnames = ['config_id', 'method', 'trial', 'params', 'fitness', 'tournament_score', 'head_to_head_score', 'runtime', 'memory', 'bit_string']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
     for row in all_results:
         writer.writerow(row)
 
-print("Experiment complete. Results saved to 'experiment_results.csv'.")
+print("Experiment complete. Results saved to 'hill_annealing.csv'.")

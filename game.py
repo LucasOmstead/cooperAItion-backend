@@ -151,7 +151,7 @@ def train_hill_climb(numRestarts: int, numIterations: int, successor, memSize):
     bestModels.sort(reverse=True, key=lambda x: x[1])
     return bestModels[0]
 
-def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor, memSize, numberOfSuccessors):
+def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor, memSize, tabuSize):
     
     #we'll be storing a vector of past 3 game states, and if the other guy has defected AT ALL (even previous to those three states)
     #128 total states once you've made it to >= 3 rounds
@@ -159,7 +159,7 @@ def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor, memSi
     #and then 2^2 states
     #and then only 1 state at first
     #so first 128 bits are just the regular states, next 16 = i == 2, next 4 = i == 1, next 1 = i == 0
-    #128 + 16 + 4 + 1 = 149 total bits 
+    #128 + 16 + 4 + 1 = 149 total bits
     
     #this is just a training set, we can swap it out with other models
     models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
@@ -168,7 +168,7 @@ def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor, memSi
     bestModels = []
     ModelPlayer = myModels[memSize]
     
-    visitedStates = LRUCache(10000)
+    visitedStates = LRUCache(tabuSize)
     for _ in range(numRestarts): #number of random restarts. After 10 iterations we just return the best model so far
         curModel = random.getrandbits(memSize)
         visitedStates.put(curModel, curModel)
@@ -178,7 +178,7 @@ def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor, memSi
 
             successors = [(curModel, calculateFitness(payoffs, models, ModelPlayer(curModel)))]
             
-            for i in range(numberOfSuccessors): #at most we'll hill climb 300 iterations
+            for i in range(2*memSize): #at most we'll hill climb 300 iterations
                 # print(i)
                 # print(curModel)
                 
@@ -196,8 +196,8 @@ def train_hill_climb_tabu(numRestarts: int, numIterations: int, successor, memSi
             
             
             successors.sort(reverse=True, key=lambda x: x[1])
-            nextModels = [successors[i][0] for i in range(numberOfSuccessors)]
-            nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(numberOfSuccessors)]
+            nextModels = [successors[i][0] for i in range(memSize)]
+            nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(memSize)]
         
 
 
@@ -375,12 +375,12 @@ payoffs2 = [[-1, -5], [0, -3]]
 memorySize = 149
 baseLineModels = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
 
-print("Annealing model:")
-annealing_model = train_simulated_annealing(1, 0.2, successor, baseLineModels, payoffs=payoffs, memSize=memorySize)
-models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), myModels[memorySize](annealing_model[0])]
-print(bin(annealing_model[0]), annealing_model[1])
-print("Annealing model fitnesses:")
-print(calculateAllFitnesses(payoffs, models))
+# print("Annealing model:")
+# annealing_model = train_simulated_annealing(1, 0.2, successor, baseLineModels, payoffs=payoffs, memSize=memorySize)
+# models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), myModels[memorySize](annealing_model[0])]
+# print(bin(annealing_model[0]), annealing_model[1])
+# print("Annealing model fitnesses:")
+# print(calculateAllFitnesses(payoffs, models))
 
 # (5, 5), (8, 0), (0, 8), (2, 2)
 # payoffs[yourAction][hisAction] = yourPayoff
