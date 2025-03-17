@@ -53,13 +53,14 @@ def run_experiment_for_config(method, params, num_trials, payoffs, memSize, base
                 params['numRestarts'],
                 params['numIterations'],
                 successor,
+                payoffs,
                 memSize
             )
         elif method == 'tabu_search':
             best_model, fitness = train_hill_climb_tabu(
-                params['numRestarts'],
                 params['numIterations'],
                 successor,
+                payoffs,
                 memSize,
                 params['tabuSize']
             )
@@ -150,12 +151,20 @@ for nr in numRestarts_values_SA:
 # Define parameter configurations for hill climbing.
 # For hill climbing, we vary numRestarts and numIterations.
 numRestarts_values_HC = [1, 2, 3, 4, 5]
-numIterations_values = [10, 20, 30, 40, 50]
+numIterations_values = [10, 20, 30, 40, 50, 100]
 
 param_configs_HC = []
 for nr in numRestarts_values_HC:
     for iters in numIterations_values:
         param_configs_HC.append({'numRestarts': nr, 'numIterations': iters})
+
+numIterations_values_tabu = [10, 20, 30, 40, 50, 100]
+tabuSize_values = [10, 20, 30]
+param_configs_tabu = []
+for iters in numIterations_values_tabu:
+    for ts in tabuSize_values:
+        param_configs_tabu.append({'numIterations': iters, 'tabuSize': ts})
+
 
 # Run experiments for simulated annealing over multiple memory sizes
 results_SA = run_experiments_over_memories('simulated_annealing', param_configs_SA,
@@ -171,8 +180,13 @@ results_HC = run_experiments_over_memories('hill_climb', param_configs_HC,
                                            memory_sizes=memory_sizes,
                                            baseLineModels=baseLineModels)
 
+results_tabu = run_experiments_over_memories('tabu_search', param_configs_HC,
+                                           num_trials=5,
+                                           payoffs=payoffs,
+                                           memory_sizes=memory_sizes,
+                                           baseLineModels=baseLineModels)
 # Combine results from both methods
-all_results = results_SA + results_HC
+all_results = results_SA + results_HC + results_tabu
 
 # Save the results to CSV
 with open('hill_annealing.csv', mode='w', newline='') as csvfile:
