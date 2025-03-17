@@ -159,7 +159,7 @@ for nr in numRestarts_values_HC:
         param_configs_HC.append({'numRestarts': nr, 'numIterations': iters})
 
 numIterations_values_tabu = [10, 20, 30, 40, 50, 100]
-tabuSize_values = [10, 20, 30]
+tabuSize_values = [10, 20, 30, 40, 50]
 param_configs_tabu = []
 for iters in numIterations_values_tabu:
     for ts in tabuSize_values:
@@ -180,7 +180,7 @@ results_HC = run_experiments_over_memories('hill_climb', param_configs_HC,
                                            memory_sizes=memory_sizes,
                                            baseLineModels=baseLineModels)
 
-results_tabu = run_experiments_over_memories('tabu_search', param_configs_HC,
+results_tabu = run_experiments_over_memories('tabu_search', param_configs_tabu,
                                            num_trials=5,
                                            payoffs=payoffs,
                                            memory_sizes=memory_sizes,
@@ -189,7 +189,7 @@ results_tabu = run_experiments_over_memories('tabu_search', param_configs_HC,
 all_results = results_SA + results_HC + results_tabu
 
 # Save the results to CSV
-with open('hill_annealing.csv', mode='w', newline='') as csvfile:
+with open('hill_annealing_tabu.csv', mode='w', newline='') as csvfile:
     fieldnames = ['config_id', 'method', 'trial', 'params', 'fitness', 'tournament_score', 'head_to_head_score', 'runtime', 'memory', 'bit_string']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()

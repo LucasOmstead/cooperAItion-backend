@@ -246,7 +246,6 @@ def train_hill_climb_tabu(numIterations: int, successor, payoffs, memSize, tabuS
             # Ensure candidate is not tabu.
             while candidate in visitedStates.keyToNode:
                 candidate = successor(candidate, memSize)
-            visitedStates.put(candidate, candidate)
             candidateFitness = calculateFitness(payoffs, models, ModelPlayer(candidate))
             successors_list.append((candidate, candidateFitness))
         
@@ -259,7 +258,7 @@ def train_hill_climb_tabu(numIterations: int, successor, payoffs, memSize, tabuS
         # Select the next current model probabilistically.
         curModel = random.choices(nextModels, nextWeights)[0]
         curFitness = calculateFitness(payoffs, models, ModelPlayer(curModel))
-        
+        visitedStates.put(curModel, curModel)
         # Update global best if needed.
         if curFitness > bestFitness:
             bestModel = curModel
