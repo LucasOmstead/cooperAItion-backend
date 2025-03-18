@@ -121,10 +121,10 @@ def train_hill_climb(numRestarts: int, numIterations: int, successor, payoffs, m
         curModel = random.getrandbits(memSize)
         
         #print(_)
-        for i in range(numIterations):
+        for _ in range(numIterations):
             successors = [(curModel, calculateFitness(payoffs, models, ModelPlayer(curModel)))]
             
-            for i in range(2*memSize): #at most we'll hill climb 300 iterations
+            for _ in range(2*memSize): #at most we'll hill climb 300 iterations
                 # print(i)
                 # print(curModel)
                 model = successor(curModel, memSize)
@@ -407,7 +407,7 @@ def local_beam_search(numIterations: int, k: int, successor, models, payoffs, me
         successors = []
         for currModel in kBestModels:
             for _ in range(100):
-                model = successor(currModel[0])
+                model = successor(currModel[0], memSize)
 
                 modelPlayer = ModelPlayer(model)
                 
