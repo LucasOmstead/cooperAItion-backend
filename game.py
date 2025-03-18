@@ -447,14 +447,14 @@ baseLineModels = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitFo
 # payoffs = [[1, 0], [5, 3]]
  
     
-print("Tabu search model: ")
-trained_bin_model, performance = train_hill_climb_tabu(40, successor, payoffs=payoffs, memSize=memorySize, tabuSize=30)
-trained_bin_model = bin(trained_bin_model)
-print(trained_bin_model, performance)
-print("Tabu search model fitnesses:")
-models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), myModels[memorySize](int(trained_bin_model[2:], 2))]
-print(calculateAllFitnesses(payoffs, models))
-# print((trained_bin_model>>148)&1, (trained_bin_model>>144)&1, (trained_bin_model>>128)&1) #prints what happens with no defections - usually 0 0 0            
+# print("Tabu search model: ")
+# trained_bin_model, performance = train_hill_climb_tabu(40, successor, payoffs=payoffs, memSize=memorySize, tabuSize=30)
+# trained_bin_model = bin(trained_bin_model)
+# print(trained_bin_model, performance)
+# print("Tabu search model fitnesses:")
+# models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), myModels[memorySize](int(trained_bin_model[2:], 2))]
+# print(calculateAllFitnesses(payoffs, models))
+# # print((trained_bin_model>>148)&1, (trained_bin_model>>144)&1, (trained_bin_model>>128)&1) #prints what happens with no defections - usually 0 0 0            
 
 
 
