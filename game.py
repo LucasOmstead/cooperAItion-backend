@@ -112,7 +112,7 @@ def successor(model, memSize):
 
 #First we'll use hill-climbing; should be easier to implement
 def train_hill_climb(numRestarts: int, numIterations: int, successor, payoffs, memSize):
-    models = [Defector(), Cooperator(), GrimTrigger(), RandomChooser(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
+    models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
 
     bestModels = []
     ModelPlayer = myModels[memSize]
