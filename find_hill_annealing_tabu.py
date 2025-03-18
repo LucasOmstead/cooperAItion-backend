@@ -151,14 +151,14 @@ for nr in numRestarts_values_SA:
 # Define parameter configurations for hill climbing.
 # For hill climbing, we vary numRestarts and numIterations.
 numRestarts_values_HC = [1, 2, 3, 4, 5]
-numIterations_values = [10, 20, 30, 40, 50, 100]
+numIterations_values = [10, 20, 30, 40, 50]
 
 param_configs_HC = []
 for nr in numRestarts_values_HC:
     for iters in numIterations_values:
         param_configs_HC.append({'numRestarts': nr, 'numIterations': iters})
 
-numIterations_values_tabu = [10, 20, 30, 40, 50, 100]
+numIterations_values_tabu = [10, 20, 30, 40, 50]
 tabuSize_values = [10, 20, 30, 40, 50]
 param_configs_tabu = []
 for iters in numIterations_values_tabu:
@@ -172,6 +172,7 @@ results_SA = run_experiments_over_memories('simulated_annealing', param_configs_
                                            payoffs=payoffs,
                                            memory_sizes=memory_sizes,
                                            baseLineModels=baseLineModels)
+print("finished Simulated annealing")
 
 # Run experiments for hill climbing over multiple memory sizes
 results_HC = run_experiments_over_memories('hill_climb', param_configs_HC,
@@ -179,12 +180,13 @@ results_HC = run_experiments_over_memories('hill_climb', param_configs_HC,
                                            payoffs=payoffs,
                                            memory_sizes=memory_sizes,
                                            baseLineModels=baseLineModels)
-
+print("finished hill climbing")
 results_tabu = run_experiments_over_memories('tabu_search', param_configs_tabu,
                                            num_trials=5,
                                            payoffs=payoffs,
                                            memory_sizes=memory_sizes,
                                            baseLineModels=baseLineModels)
+print("finished tabu search")
 # Combine results from both methods
 all_results = results_SA + results_HC + results_tabu
 
