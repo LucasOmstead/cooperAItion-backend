@@ -160,30 +160,31 @@ for iters in numIterations_values_tabu:
         param_configs_tabu.append({'numIterations': iters, 'tabuSize': ts})
 
 
-# # Run experiments for simulated annealing over multiple memory sizes
-# results_SA = run_experiments_over_memories('simulated_annealing', param_configs_SA,
-#                                            num_trials=1,
-#                                            payoffs=payoffs,
-#                                            memory_sizes=memory_sizes,
+# Run experiments for simulated annealing over multiple memory sizes
+results_SA = run_experiments_over_memories('simulated_annealing', param_configs_SA,
+                                           num_trials=5,
+                                           payoffs=payoffs,
+                                           memory_sizes=memory_sizes,
 
-#                                            baseLineModels=baseLineModels)
-# print("finished Simulated annealing")
+                                           baseLineModels=baseLineModels)
+print("finished Simulated annealing")
 
-# # Run experiments for hill climbing over multiple memory sizes
-# results_HC = run_experiments_over_memories('hill_climb', param_configs_HC,
-#                                            num_trials=1,
-#                                            payoffs=payoffs,
-#                                            memory_sizes=memory_sizes,
-#                                            baseLineModels=baseLineModels)
-# # print("finished hill climbing")
-results_tabu = run_experiments_over_memories('tabu_search', param_configs_tabu,
-                                           num_trials=1,
+# Run experiments for hill climbing over multiple memory sizes
+results_HC = run_experiments_over_memories('hill_climb', param_configs_HC,
+                                           num_trials=5,
                                            payoffs=payoffs,
                                            memory_sizes=memory_sizes,
                                            baseLineModels=baseLineModels)
+print("finished hill climbing")
+results_tabu = run_experiments_over_memories('tabu_search', param_configs_tabu,
+                                           num_trials=5,
+                                           payoffs=payoffs,
+                                           memory_sizes=memory_sizes,
+                                           baseLineModels=baseLineModels)
+
 print("finished tabu search")
 # Combine results from both methods
-all_results = results_tabu
+all_results = results_SA + results_HC + results_tabu
 print(all_results[0])
 for row in all_results:
     # row['bit_string'] = bin(row['bit_string'])[2:]
