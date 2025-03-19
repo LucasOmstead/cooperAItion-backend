@@ -116,7 +116,7 @@ def train_hill_climb(numRestarts: int, numIterations: int, successor, payoffs, m
 
     bestModels = []
     ModelPlayer = myModels[memSize]
-    numSuccessorsGenerated = 20
+    numSuccessorsGenerated = 40
     for _ in range(numRestarts): #number of random restarts. After 10 iterations we just return the best model so far
         curModel = random.getrandbits(memSize)
         
@@ -167,7 +167,7 @@ def train_hill_climb_tabu_restart(numRestarts: int, numIterations: int, successo
 
     bestModels = []
     ModelPlayer = myModels[memSize]
-    
+    numSuccessorsGenerated = 40
     visitedStates = LRUCache(tabuSize)
     for _ in range(numRestarts): #number of random restarts. After 10 iterations we just return the best model so far
         curModel = random.getrandbits(memSize)
@@ -178,7 +178,7 @@ def train_hill_climb_tabu_restart(numRestarts: int, numIterations: int, successo
 
             successors = [(curModel, calculateFitness(payoffs, models, ModelPlayer(curModel)))]
             
-            for i in range(2*memSize): #at most we'll hill climb 300 iterations
+            for i in range(numSuccessorsGenerated): #at most we'll hill climb 300 iterations
                 # print(i)
                 # print(curModel)
                 
@@ -196,8 +196,8 @@ def train_hill_climb_tabu_restart(numRestarts: int, numIterations: int, successo
             
             
             successors.sort(reverse=True, key=lambda x: x[1])
-            nextModels = [successors[i][0] for i in range(memSize)]
-            nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(memSize)]
+            nextModels = [successors[i][0] for i in range(numSuccessorsGenerated)]
+            nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(numSuccessorsGenerated)]
         
 
 

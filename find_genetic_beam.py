@@ -119,7 +119,7 @@ def run_genetic_suite(payoffs, memory_sizes, baseLineModels):
 
     all_results = []
     config_id = 1
-    
+    print("ASCDASD")
     # Run experiments across memory sizes
     for mem in memory_sizes:
         # Basic genetic algorithm
@@ -128,7 +128,7 @@ def run_genetic_suite(payoffs, memory_sizes, baseLineModels):
                                            payoffs, mem, baseLineModels, config_id)
             all_results.extend(results)
             config_id += 1
-    
+    print("THS")
     for mem in memory_sizes:     
         # Genetic algorithm with mutation
         for params in mutation_configs:
@@ -136,7 +136,7 @@ def run_genetic_suite(payoffs, memory_sizes, baseLineModels):
                                             payoffs, mem, baseLineModels, config_id)
             all_results.extend(results)
             config_id += 1
-    
+    print("ABCSD")
     for mem in memory_sizes:
         for params in local_beam_configs:
             results = run_genetic_experiment('local_beam', params, 5,
