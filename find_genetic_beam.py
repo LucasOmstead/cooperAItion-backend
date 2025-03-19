@@ -110,8 +110,8 @@ def run_genetic_suite(payoffs, memory_sizes, baseLineModels):
             })
 
     local_beam_configs = []
-    for iters in [10, 20, 40, 80, 160]:
-        for k in [1, 2, 4, 8, 16, 32]:
+    for iters in [10, 20, 40, 80]:
+        for k in [1, 2, 4, 8, 16]:
             local_beam_configs.append({
                 'k': k,
                 'numIterations': iters,
