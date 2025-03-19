@@ -6,25 +6,19 @@ from math import ceil
 from game import calculateFitness, local_beam_search, playGame, calculateAllFitnesses, successor, train_basic_genetic, train_basic_genetic_mutation
 from players import myModels, Defector, Cooperator, GrimTrigger, TitForTat, TwoTitForTat, NiceTitForTat, SuspiciousTitForTat
 
-def head_to_head(player1, player2, payoffs, minRounds=50, maxRounds=200, numMatches=20):
+def head_to_head(player1, player2, payoffs, numRounds=100, numMatches=1):
     """Identical to your existing implementation"""
-    total_score1 = 0
-    total_score2 = 0
-    for _ in range(numMatches):
-        numRounds = random.randint(minRounds, maxRounds)
-        s1, s2 = playGame(payoffs, player1, player2, numRounds)
-        total_score1 += s1
-        total_score2 += s2
-    avg_score1 = total_score1 / numMatches
-    avg_score2 = total_score2 / numMatches
+    s1, s2 = playGame(payoffs, player1, player2, numRounds)
+    avg_score1 = s1 / numMatches
+    avg_score2 = s1 / numMatches
     return avg_score1, avg_score2
 
-def head_to_head_all(evolved_player, baselines, payoffs, minRounds=50, maxRounds=200, numMatches=20):
+def head_to_head_all(evolved_player, baselines, payoffs, numRounds, numMatches=1):
     """Identical to your existing implementation"""
     total = 0
     count = 0
     for baseline in baselines:
-        avg_evolved, _ = head_to_head(evolved_player, baseline, payoffs, minRounds, maxRounds, numMatches)
+        avg_evolved, _ = head_to_head(evolved_player, baseline, payoffs, numRounds, numMatches)
         total += avg_evolved
         count += 1
     return round(total / count, 2) if count > 0 else 0
