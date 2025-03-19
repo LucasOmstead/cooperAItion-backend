@@ -73,8 +73,6 @@ def run_genetic_experiment(method, params, num_trials, payoffs, memSize, baseLin
 
         # Evaluation metrics
         models = baseLineModels + [myModels[memSize](best_model)]
-        tournament_scores = calculateAllFitnesses(payoffs, models)
-        rounded_tournament_scores = [round(score, 2) for score in tournament_scores]
 
         evolved_player = myModels[memSize](best_model)
         h2h_score = head_to_head_all(evolved_player, baseLineModels, payoffs)
@@ -85,7 +83,6 @@ def run_genetic_experiment(method, params, num_trials, payoffs, memSize, baseLin
             'trial': trial,
             'params': str(params),
             'fitness': round(fitness, 2),
-            'tournament_score': str(rounded_tournament_scores),
             'head_to_head_score': h2h_score,
             'runtime': round(elapsed, 5),
             'memory': memSize,
@@ -102,7 +99,7 @@ def run_genetic_suite(payoffs, memory_sizes, baseLineModels):
             genetic_configs.append({
                 'pop_size': pop,
                 'numIterations': iters,
-                'percentForCrossover': 0.9
+                'percentForCrossover': 1.0
             })
 
     # Genetic Algorithm with mutation
@@ -112,7 +109,7 @@ def run_genetic_suite(payoffs, memory_sizes, baseLineModels):
             mutation_configs.append({
                 'pop_size': pop,
                 'numIterations': iters,
-                'percentForCrossover': 0.9,
+                'percentForCrossover': 1.0,
                 'mutationPercent': 0.05,
                 'mutationCount': 2
             })

@@ -168,7 +168,7 @@ for iters in numIterations_values_tabu:
 
 # Run experiments for simulated annealing over multiple memory sizes
 results_SA = run_experiments_over_memories('simulated_annealing', param_configs_SA,
-                                           num_trials=1,
+                                           num_trials=5,
                                            payoffs=payoffs,
                                            memory_sizes=memory_sizes,
                                            baseLineModels=baseLineModels)
@@ -176,23 +176,20 @@ print("finished Simulated annealing")
 
 # Run experiments for hill climbing over multiple memory sizes
 results_HC = run_experiments_over_memories('hill_climb', param_configs_HC,
-                                           num_trials=1,
+                                           num_trials=5,
                                            payoffs=payoffs,
                                            memory_sizes=memory_sizes,
                                            baseLineModels=baseLineModels)
 print("finished hill climbing")
 results_tabu = run_experiments_over_memories('tabu_search', param_configs_tabu,
-                                           num_trials=1,
+                                           num_trials=5,
                                            payoffs=payoffs,
                                            memory_sizes=memory_sizes,
                                            baseLineModels=baseLineModels)
 print("finished tabu search")
 # Combine results from both methods
 all_results = results_SA + results_HC + results_tabu
-print(all_results[0])
-for row in all_results:
-    # row['bit_string'] = bin(row['bit_string'])[2:]
-    row['bit_string'] = "0"*(row['memory']-len(row['bit_string'])) + row['bit_string']
+
 # Save the results to CSV
 with open('hill_annealing_tabu.csv', mode='w', newline='') as csvfile:
     fieldnames = ['config_id', 'method', 'trial', 'params', 'fitness', 'tournament_score', 'head_to_head_score', 'runtime', 'memory', 'bit_string']
