@@ -267,7 +267,7 @@ def train_hill_climb_tabu(numIterations: int, successor, payoffs, memSize, tabuS
     return bestModel, bestFitness
 
 
-def train_simulated_annealing(numRestarts, temperature, successor, models, payoffs, memSize):
+def train_simulated_annealing(numRestarts, temperature, successor, models, payoffs, memSize, coolingMul=.99):
     #generate a successor state. If better take it, otherwise don't
     curModel = random.getrandbits(memSize)
 
@@ -293,7 +293,7 @@ def train_simulated_annealing(numRestarts, temperature, successor, models, payof
                 curModel = random.choices([curModel, nextModel], [1-probChoose, probChoose])[0]
                 #4 possibilities for the first move: CC, CD, DC, DD
                 #1st move can have 4 possibilities, 2nd move can have 4 possibilities 4 x 4 = 16
-            t *= .99
+            t *= coolingMul
 
     return (bestGlobal, calculateFitness(payoffs, models, ModelPlayer(bestGlobal)))
 

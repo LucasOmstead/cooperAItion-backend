@@ -38,7 +38,8 @@ def run_experiment_for_config(method, params, num_trials, payoffs, memSize, base
                 successor,
                 baseLineModels,
                 payoffs,
-                memSize
+                memSize,
+                params['cooling']
             )
         elif method == 'hill_climb':
             best_model, fitness = train_hill_climb(
@@ -135,9 +136,10 @@ memory_sizes = [21, 85, 149]
 config_id = 1
 # Instead of using a dict, build a list of parameter configurations for SA.
 param_configs_SA = []
-for nr in numRestarts_values_SA:
-    for temp in temperature_values:
-        param_configs_SA.append({'numRestarts': nr, 'temperature': temp})
+
+for temp in temperature_values:
+    for cooling_val in cooling_mul:
+        param_configs_SA.append({'numRestarts': 5, 'temperature': temp, 'cooling':cooling_val})
 
 
 # Define parameter configurations for hill climbing.
@@ -163,6 +165,7 @@ results_SA = run_experiments_over_memories('simulated_annealing', param_configs_
                                            num_trials=1,
                                            payoffs=payoffs,
                                            memory_sizes=memory_sizes,
+
                                            baseLineModels=baseLineModels)
 print("finished Simulated annealing")
 
