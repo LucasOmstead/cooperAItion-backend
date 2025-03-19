@@ -387,12 +387,13 @@ def local_beam_search(numIterations: int, k: int, successor, models, payoffs, me
     #take the best found
     kBestModels.sort(reverse=True, key=lambda x: x[1])
     bestModelFound = kBestModels[0]
+    numSuccessors = memSize
 
     #number of times of expansion of the k best models
     for _ in range(numIterations):
         successors = []
         for currModel in kBestModels:
-            for _ in range(100):
+            for _ in range(numSuccessors):
                 model = successor(currModel[0], memSize)
 
                 modelPlayer = ModelPlayer(model)

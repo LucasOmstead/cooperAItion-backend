@@ -144,16 +144,16 @@ for temp in temperature_values:
 
 # Define parameter configurations for hill climbing.
 # For hill climbing, we vary numRestarts and numIterations.
-numRestarts_values_HC = [1,2,4,8]
-numIterations_values = [10, 20, 40, 80, 160]
+numRestarts_values_HC = [1]
+numIterations_values = [1,2,4,8,16,32,64,128]
 
 param_configs_HC = []
 for nr in numRestarts_values_HC:
     for iters in numIterations_values:
         param_configs_HC.append({'numRestarts': nr, 'numIterations': iters})
 
-numIterations_values_tabu =  [10, 20, 40, 80]
-tabuSize_values = [10, 20, 40, 80, 160]
+numIterations_values_tabu =  [1,2,4,8,16,32,64,128]
+tabuSize_values = [5,10,20,40]
 param_configs_tabu = []
 for iters in numIterations_values_tabu:
     for ts in tabuSize_values:
