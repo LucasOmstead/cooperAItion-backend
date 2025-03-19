@@ -89,7 +89,7 @@ def run_genetic_suite(payoffs, memory_sizes, baseLineModels):
     """Configure and run genetic algorithm experiments"""
     # Genetic Algorithm without mutation
     genetic_configs = []
-    for pop in [1, 2, 4, 8, 16]:
+    for pop in [1, 2, 4, 8, 16, 32, 64]:
         for iters in [5, 10, 20, 40, 80]:
             genetic_configs.append({
                 'pop_size': pop,
@@ -99,7 +99,7 @@ def run_genetic_suite(payoffs, memory_sizes, baseLineModels):
 
     # Genetic Algorithm with mutation
     mutation_configs = []
-    for pop in [1, 2, 4, 8, 16]:
+    for pop in [1, 2, 4, 8, 16, 32, 64]:
         for iters in [5, 10, 20, 40, 80]:
             mutation_configs.append({
                 'pop_size': pop,
@@ -111,7 +111,7 @@ def run_genetic_suite(payoffs, memory_sizes, baseLineModels):
 
     local_beam_configs = []
     for iters in [10, 20, 40, 80]:
-        for k in [1, 2, 4, 8, 16]:
+        for k in [1, 2, 4, 8]:
             local_beam_configs.append({
                 'k': k,
                 'numIterations': iters,
