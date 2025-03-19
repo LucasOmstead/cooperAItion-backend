@@ -82,7 +82,7 @@ def playGame(payoffs, player1: Player, player2: Player, numRounds: int):
         score1 += payoffs[action1][action2]
         score2 += payoffs[action2][action1]
     # print(player1, player2)
-    return (score1, score2)
+    return (score1/numRounds, score2/numRounds)
 
 def calculateAllFitnesses(payoffs, models):
     #each player in the pool plays 1 game against each other
@@ -90,7 +90,7 @@ def calculateAllFitnesses(payoffs, models):
     
     for i in range(len(models)):
         for j in range(len(models)):
-            score1, score2 = playGame(payoffs, models[i], models[j], 10)
+            score1, score2 = playGame(payoffs, models[i], models[j], 100)
             scores[i] += score1 
             scores[j] += score2 
     return scores
@@ -100,10 +100,10 @@ def calculateFitness(payoffs, models, modelPlayer):
 
     score = 0
     for i in range(len(models)):
-        score1, score2 = playGame(payoffs, models[i], modelPlayer, 10)
+        score1, score2 = playGame(payoffs, models[i], modelPlayer, 100)
         score += score2 
     score += playGame(payoffs, modelPlayer, modelPlayer, 10)[0]
-    return score
+    return score/(len(models)+1)
 
 def successor(model, memSize):
     for _ in range(random.randint(1, 10)):
@@ -116,7 +116,7 @@ def train_hill_climb(numRestarts: int, numIterations: int, successor, payoffs, m
 
     bestModels = []
     ModelPlayer = myModels[memSize]
-
+    numSuccessorsGenerated = 20
     for _ in range(numRestarts): #number of random restarts. After 10 iterations we just return the best model so far
         curModel = random.getrandbits(memSize)
         
@@ -124,7 +124,7 @@ def train_hill_climb(numRestarts: int, numIterations: int, successor, payoffs, m
         for _ in range(numIterations):
             successors = [(curModel, calculateFitness(payoffs, models, ModelPlayer(curModel)))]
             
-            for _ in range(2*memSize): #at most we'll hill climb 300 iterations
+            for _ in range(numSuccessorsGenerated): #at most we'll hill climb 300 iterations
                 # print(i)
                 # print(curModel)
                 model = successor(curModel, memSize)
@@ -138,8 +138,8 @@ def train_hill_climb(numRestarts: int, numIterations: int, successor, payoffs, m
             # print(successors)
             
             successors.sort(reverse=True, key=lambda x: x[1])
-            nextModels = [successors[i][0] for i in range(memSize)]
-            nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(memSize)]
+            nextModels = [successors[i][0] for i in range(numSuccessorsGenerated)]
+            nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(numSuccessorsGenerated)]
         
 
 
@@ -430,15 +430,20 @@ payoffs = [[cooperateReward[0], betrayedReward[0]],
              [betrayalReward[0], bothBetray[0]]]
 
 payoffs2 = [[-1, -5], [0, -3]]
-memorySize = 85
+payoffs = [[3, 0], [5, 1]]
+memorySize = 149
 baseLineModels = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
 
 # print("Annealing model:")
-# annealing_model = train_simulated_annealing(1, 0.2, successor, baseLineModels, payoffs=payoffs, memSize=memorySize)
-# models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), myModels[memorySize](annealing_model[0])]
+# annealing_model = train_simulated_annealing(1, 1, successor, models=baseLineModels, payoffs=payoffs, memSize=memorySize)
+# # annealing_model = train_hill_climb(20, 150, successor, payoffs, 149)
+# models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
 # print(bin(annealing_model[0]), annealing_model[1])
 # print("Annealing model fitnesses:")
+# print(calculateFitness(payoffs, models, myModels[149](annealing_model[0])))
 # print(calculateAllFitnesses(payoffs, models))
+
+
 
 # (5, 5), (8, 0), (0, 8), (2, 2)
 # payoffs[yourAction][hisAction] = yourPayoff
