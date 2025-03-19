@@ -123,16 +123,13 @@ def train_hill_climb(numRestarts: int, numIterations: int, successor, payoffs, m
         for _ in range(numIterations):
             successors = [(curModel, calculateFitness(payoffs, models, ModelPlayer(curModel)))]
             
-            for _ in range(numSuccessorsGenerated): #at most we'll hill climb 300 iterations
-                # print(i)
-                # print(curModel)
-                model = successor(curModel, memSize)
-                
-                # print(model)
+            for _ in range(memSize):
+                model = curModel ^ (1 << _)
                 modelPlayer = ModelPlayer(model)
 
                 fitness = calculateFitness(payoffs=payoffs, models=models, modelPlayer=modelPlayer)
                 successors.append((model, fitness))
+            
                 
             # print(successors)
             
@@ -177,21 +174,14 @@ def train_hill_climb_tabu_restart(numRestarts: int, numIterations: int, successo
 
             successors = [(curModel, calculateFitness(payoffs, models, ModelPlayer(curModel)))]
             
-            for i in range(numSuccessorsGenerated): #at most we'll hill climb 300 iterations
-                # print(i)
-                # print(curModel)
-                
-                model = successor(curModel, memSize)
+            for _ in range(memSize):
+                model = curModel ^ (1 << _)
                 while model in visitedStates.keyToNode:
-                    model = successor(model, memSize)
-                    
-                visitedStates.put(model, model)
-                
+                    model = model ^ (1 << random.randint(0, 148))
                 modelPlayer = ModelPlayer(model)
 
                 fitness = calculateFitness(payoffs=payoffs, models=models, modelPlayer=modelPlayer)
                 successors.append((model, fitness))
-                
             
             
             successors.sort(reverse=True, key=lambda x: x[1])
