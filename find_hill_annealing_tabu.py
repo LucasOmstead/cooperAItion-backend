@@ -128,8 +128,8 @@ baseLineModels = [
 
 #UPDATE THIS FIELD TO BE COOLING SCHEDULE AND HARD CODE TO 5 RANDOM RESTARTS
 numRestarts_values_SA = [5]
-temperature_values = [.2, .5, 1, 2, 4, 8, 16]
-cooling_mul = [.5, .9, .99, .999]
+temperature_values = [.2, .5, 1, 2, 4, 8]
+cooling_mul = [.5, .9, .99, .995]
 
 # Define a list of memory sizes to test
 memory_sizes = [21, 85, 149]
@@ -144,16 +144,16 @@ for temp in temperature_values:
 
 # Define parameter configurations for hill climbing.
 # For hill climbing, we vary numRestarts and numIterations.
-numRestarts_values_HC = [5]
-numIterations_values = [1,2,4,8,16,32,64,128]
+numRestarts_values_HC = [1]
+numIterations_values = [1,2,4,8,16,32,64]
 
 param_configs_HC = []
 for nr in numRestarts_values_HC:
     for iters in numIterations_values:
         param_configs_HC.append({'numRestarts': nr, 'numIterations': iters})
 
-numIterations_values_tabu =  [1,2,4,8,16,32,64,128]
-tabuSize_values = [5,10,20,40]
+numIterations_values_tabu =  [1,2,4,8,16,32,64]
+tabuSize_values = [5,10,20]
 param_configs_tabu = []
 for iters in numIterations_values_tabu:
     for ts in tabuSize_values:

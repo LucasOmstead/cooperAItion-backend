@@ -424,14 +424,14 @@ memorySize = 149
 baseLineModels = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
 
 
-print("Genetic model:")
-annealing_model = local_beam_search(20, 80, successor, baseLineModels, payoffs, 149)
-# annealing_model = train_basic_genetic_mutation(5, 20, 1, .05, 5, baseLineModels, payoffs, 149)
-models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
-print(bin(annealing_model[0]), annealing_model[1])
-print("Genetic model fitnesses:")
-print(calculateFitness(payoffs, models, myModels[149](annealing_model[0])))
-print(calculateAllFitnesses(payoffs, models))
+# print("Genetic model:")
+# annealing_model = local_beam_search(20, 80, successor, baseLineModels, payoffs, 149)
+# # annealing_model = train_basic_genetic_mutation(5, 20, 1, .05, 5, baseLineModels, payoffs, 149)
+# models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
+# print(bin(annealing_model[0]), annealing_model[1])
+# print("Genetic model fitnesses:")
+# print(calculateFitness(payoffs, models, myModels[149](annealing_model[0])))
+# print(calculateAllFitnesses(payoffs, models))
 
 
 
