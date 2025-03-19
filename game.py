@@ -392,8 +392,10 @@ def local_beam_search(numIterations: int, k: int, successor, models, payoffs, me
     for _ in range(numIterations):
         successors = []
         for currModel in kBestModels:
-            for _ in range(100):
-                model = successor(currModel[0], memSize)
+            
+            for i in range(memSize):
+                model = currModel[0] << i 
+                # model = successor(currModel[0], memSize)
 
                 modelPlayer = ModelPlayer(model)
                 
@@ -420,14 +422,16 @@ payoffs = [[3, 0], [5, 1]]
 memorySize = 149
 baseLineModels = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
 
-# print("Annealing model:")
-# annealing_model = train_simulated_annealing(1, 1, successor, models=baseLineModels, payoffs=payoffs, memSize=memorySize)
-# # annealing_model = train_hill_climb(20, 150, successor, payoffs, 149)
-# models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
-# print(bin(annealing_model[0]), annealing_model[1])
-# print("Annealing model fitnesses:")
-# print(calculateFitness(payoffs, models, myModels[149](annealing_model[0])))
-# print(calculateAllFitnesses(payoffs, models))
+
+print("Genetic model:")
+annealing_model = local_beam_search(20, 80, successor, baseLineModels, payoffs, 149)
+# annealing_model = train_basic_genetic_mutation(5, 20, 1, .05, 5, baseLineModels, payoffs, 149)
+models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
+print(bin(annealing_model[0]), annealing_model[1])
+print("Genetic model fitnesses:")
+print(calculateFitness(payoffs, models, myModels[149](annealing_model[0])))
+print(calculateAllFitnesses(payoffs, models))
+
 
 
 
