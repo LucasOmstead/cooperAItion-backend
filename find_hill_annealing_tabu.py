@@ -126,9 +126,9 @@ baseLineModels = [
 # For simulated annealing, we vary numRestarts and temperature.
 
 #UPDATE THIS FIELD TO BE COOLING SCHEDULE AND HARD CODE TO 5 RANDOM RESTARTS
-numRestarts_values_SA = [1, 2, 3, 4, 5]
+numRestarts_values_SA = [5]
 temperature_values = [.2, .5, 1, 2, 4, 8, 16]
-
+cooling_mul = [.5, .9, .99, .999]
 
 # Define a list of memory sizes to test
 memory_sizes = [21, 85, 149]
