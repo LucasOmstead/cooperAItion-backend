@@ -128,7 +128,7 @@ baseLineModels = [
 
 #UPDATE THIS FIELD TO BE COOLING SCHEDULE AND HARD CODE TO 5 RANDOM RESTARTS
 numRestarts_values_SA = [5]
-temperature_values = [.2, .5, 1, 2, 4, 8]
+temperature_values = [.2, .5, 1, 2, 4, 8, 16]
 cooling_mul = [.5, .9, .99, .995]
 
 # Define a list of memory sizes to test
