@@ -5,28 +5,20 @@ from math import e, ceil
 from game import train_simulated_annealing, train_hill_climb, calculateAllFitnesses, successor, playGame, train_hill_climb_tabu
 from players import myModels, Defector, Cooperator, GrimTrigger, TitForTat, TwoTitForTat, NiceTitForTat, SuspiciousTitForTat
 
-def head_to_head(player1, player2, payoffs, minRounds=50, maxRounds=200, numMatches=20):
+def head_to_head(player1, player2, payoffs, numRounds):
     """Run head-to-head matches between two players.
     For each match, randomly select a number of rounds between minRounds and maxRounds.
     Returns the average score of player1 and player2 over all matches."""
-    total_score1 = 0
-    total_score2 = 0
-    for _ in range(numMatches):
-        numRounds = random.randint(minRounds, maxRounds)
-        s1, s2 = playGame(payoffs, player1, player2, numRounds)
-        total_score1 += s1
-        total_score2 += s2
-    avg_score1 = total_score1 / numMatches
-    avg_score2 = total_score2 / numMatches
-    return avg_score1, avg_score2
+    s1, s2 = playGame(payoffs, player1, player2, numRounds)
+    return s1, s2
 
-def head_to_head_all(evolved_player, baselines, payoffs, minRounds=50, maxRounds=200, numMatches=20):
+def head_to_head_all(evolved_player, baselines, payoffs):
     """Evaluate the evolved model against each baseline model using head-to-head matches.
     Returns the average evolved model score over all baseline matchups."""
     total = 0
     count = 0
     for baseline in baselines:
-        avg_evolved, _ = head_to_head(evolved_player, baseline, payoffs, minRounds, maxRounds, numMatches)
+        avg_evolved, _ = head_to_head(evolved_player, baseline, payoffs, numRounds=20)
         total += avg_evolved
         count += 1
     return round(total / count, 2) if count > 0 else 0
@@ -73,7 +65,7 @@ def run_experiment_for_config(method, params, num_trials, payoffs, memSize, base
 
         # Evaluate head-to-head performance: evolved model vs. each baseline.
         evolved_player = myModels[memSize](best_model)
-        head_to_head_score = head_to_head_all(evolved_player, baseLineModels, payoffs, minRounds=50, maxRounds=200, numMatches=20)
+        head_to_head_score = head_to_head_all(evolved_player, baseLineModels, payoffs)
 
         results.append({
             'config_id': config_id,
@@ -132,8 +124,11 @@ baseLineModels = [
 
 # Define parameter configurations for simulated annealing.
 # For simulated annealing, we vary numRestarts and temperature.
+
+#UPDATE THIS FIELD TO BE COOLING SCHEDULE AND HARD CODE TO 5 RANDOM RESTARTS
 numRestarts_values_SA = [1, 2, 3, 4, 5]
-temperature_values = [0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45]
+temperature_values = [.2, .5, 1, 2, 4, 8, 16]
+
 
 # Define a list of memory sizes to test
 memory_sizes = [21, 85, 149]
@@ -147,16 +142,16 @@ for nr in numRestarts_values_SA:
 
 # Define parameter configurations for hill climbing.
 # For hill climbing, we vary numRestarts and numIterations.
-numRestarts_values_HC = [1, 2, 3, 4, 5]
-numIterations_values = [10, 20, 30, 40, 50]
+numRestarts_values_HC = [1, 2, 4, 8, 16]
+numIterations_values = [10, 20, 40, 80, 160]
 
 param_configs_HC = []
 for nr in numRestarts_values_HC:
     for iters in numIterations_values:
         param_configs_HC.append({'numRestarts': nr, 'numIterations': iters})
 
-numIterations_values_tabu = [10, 20, 30, 40, 50]
-tabuSize_values = [10, 20, 30, 40, 50]
+numIterations_values_tabu =  [10, 20, 40, 80]
+tabuSize_values = [10, 20, 40, 80, 160]
 param_configs_tabu = []
 for iters in numIterations_values_tabu:
     for ts in tabuSize_values:

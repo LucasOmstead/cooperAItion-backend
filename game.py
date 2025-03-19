@@ -100,7 +100,7 @@ def calculateFitness(payoffs, models, modelPlayer):
 
     score = 0
     for i in range(len(models)):
-        score1, score2 = playGame(payoffs, models[i], modelPlayer, 100)
+        score1, score2 = playGame(payoffs, models[i], modelPlayer, 20)
         score += score2 
     score += playGame(payoffs, modelPlayer, modelPlayer, 10)[0]
     return score/(len(models)+1)
