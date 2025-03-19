@@ -434,14 +434,14 @@ payoffs = [[3, 0], [5, 1]]
 memorySize = 149
 baseLineModels = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
 
-print("Annealing model:")
-annealing_model = train_simulated_annealing(1, 1, successor, models=baseLineModels, payoffs=payoffs, memSize=memorySize)
-# annealing_model = train_hill_climb(20, 150, successor, payoffs, 149)
-models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
-print(bin(annealing_model[0]), annealing_model[1])
-print("Annealing model fitnesses:")
-print(calculateFitness(payoffs, models, myModels[149](annealing_model[0])))
-print(calculateAllFitnesses(payoffs, models))
+# print("Annealing model:")
+# annealing_model = train_simulated_annealing(1, 1, successor, models=baseLineModels, payoffs=payoffs, memSize=memorySize)
+# # annealing_model = train_hill_climb(20, 150, successor, payoffs, 149)
+# models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()]
+# print(bin(annealing_model[0]), annealing_model[1])
+# print("Annealing model fitnesses:")
+# print(calculateFitness(payoffs, models, myModels[149](annealing_model[0])))
+# print(calculateAllFitnesses(payoffs, models))
 
 
 

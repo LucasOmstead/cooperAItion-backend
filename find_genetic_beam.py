@@ -13,7 +13,7 @@ def head_to_head(player1, player2, payoffs, numRounds=100, numMatches=1):
     avg_score2 = s1 / numMatches
     return avg_score1, avg_score2
 
-def head_to_head_all(evolved_player, baselines, payoffs, numRounds, numMatches=1):
+def head_to_head_all(evolved_player, baselines, payoffs, numRounds=100, numMatches=1):
     """Identical to your existing implementation"""
     total = 0
     count = 0
