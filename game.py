@@ -106,8 +106,7 @@ def calculateFitness(payoffs, models, modelPlayer):
     return score/(len(models)+1)
 
 def successor(model, memSize):
-    for _ in range(random.randint(1, 10)):
-        model = model ^ (1 << random.randint(0, memSize-1))
+    model = model ^ (1 << random.randint(0, memSize-1))
     return model
 
 #First we'll use hill-climbing; should be easier to implement
@@ -116,7 +115,7 @@ def train_hill_climb(numRestarts: int, numIterations: int, successor, payoffs, m
 
     bestModels = []
     ModelPlayer = myModels[memSize]
-    numSuccessorsGenerated = 40
+    numSuccessorsGenerated = memSize
     for _ in range(numRestarts): #number of random restarts. After 10 iterations we just return the best model so far
         curModel = random.getrandbits(memSize)
         
@@ -143,7 +142,7 @@ def train_hill_climb(numRestarts: int, numIterations: int, successor, payoffs, m
         
 
 
-            curModel = random.choices(nextModels, nextWeights)[0]
+            curModel = random.choices(nextModels, nextWeights)[0] if sum(nextWeights) != 0 else successors[0]
             # print(curModel)
             
         # print(bestModels)
@@ -167,7 +166,7 @@ def train_hill_climb_tabu_restart(numRestarts: int, numIterations: int, successo
 
     bestModels = []
     ModelPlayer = myModels[memSize]
-    numSuccessorsGenerated = 40
+    numSuccessorsGenerated = 20
     visitedStates = LRUCache(tabuSize)
     for _ in range(numRestarts): #number of random restarts. After 10 iterations we just return the best model so far
         curModel = random.getrandbits(memSize)
@@ -198,11 +197,8 @@ def train_hill_climb_tabu_restart(numRestarts: int, numIterations: int, successo
             successors.sort(reverse=True, key=lambda x: x[1])
             nextModels = [successors[i][0] for i in range(numSuccessorsGenerated)]
             nextWeights = [(successors[i][1]-successors[-1][1])**2 for i in range(numSuccessorsGenerated)]
-        
 
-
-            curModel = random.choices(nextModels, nextWeights)[0]
-            
+            curModel = random.choices(nextModels, nextWeights)[0] if sum(nextWeights) != 0 else successors[0]
         
         bestModels.append((curModel, calculateFitness(payoffs, models, ModelPlayer(curModel))))
     bestModels.sort(reverse=True, key=lambda x: x[1])

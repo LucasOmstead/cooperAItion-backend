@@ -144,7 +144,7 @@ for temp in temperature_values:
 
 # Define parameter configurations for hill climbing.
 # For hill climbing, we vary numRestarts and numIterations.
-numRestarts_values_HC = [5]
+numRestarts_values_HC = [1,2,4,8]
 numIterations_values = [10, 20, 40, 80, 160]
 
 param_configs_HC = []
@@ -167,23 +167,23 @@ for iters in numIterations_values_tabu:
 #                                            memory_sizes=memory_sizes,
 
 #                                            baseLineModels=baseLineModels)
-print("finished Simulated annealing")
+# print("finished Simulated annealing")
 
-# Run experiments for hill climbing over multiple memory sizes
-results_HC = run_experiments_over_memories('hill_climb', param_configs_HC,
-                                           num_trials=1,
-                                           payoffs=payoffs,
-                                           memory_sizes=memory_sizes,
-                                           baseLineModels=baseLineModels)
-# print("finished hill climbing")
-# results_tabu = run_experiments_over_memories('tabu_search', param_configs_tabu,
+# # Run experiments for hill climbing over multiple memory sizes
+# results_HC = run_experiments_over_memories('hill_climb', param_configs_HC,
 #                                            num_trials=1,
 #                                            payoffs=payoffs,
 #                                            memory_sizes=memory_sizes,
 #                                            baseLineModels=baseLineModels)
+# # print("finished hill climbing")
+results_tabu = run_experiments_over_memories('tabu_search', param_configs_tabu,
+                                           num_trials=1,
+                                           payoffs=payoffs,
+                                           memory_sizes=memory_sizes,
+                                           baseLineModels=baseLineModels)
 print("finished tabu search")
 # Combine results from both methods
-all_results = results_HC
+all_results = results_tabu
 print(all_results[0])
 for row in all_results:
     # row['bit_string'] = bin(row['bit_string'])[2:]
