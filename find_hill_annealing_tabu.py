@@ -144,7 +144,7 @@ for temp in temperature_values:
 
 # Define parameter configurations for hill climbing.
 # For hill climbing, we vary numRestarts and numIterations.
-numRestarts_values_HC = [1]
+numRestarts_values_HC = [5]
 numIterations_values = [1,2,4,8,16,32,64,128]
 
 param_configs_HC = []
