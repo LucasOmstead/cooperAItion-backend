@@ -1,18 +1,4 @@
-'''
-So, how should I represent the game?
-
-Game state is easiest to represent with a 2d array:
-a[0] = all moves of 1st player
-a[1] = all moves of 2nd player
--1 = no move yet, 0 = cooperate, 1 = defect
-
-TODO:
--implement genetic algorithm
--implement hill-climbing algorithm
--tabu search (use LRU cache for hill-climbing)
--simulated annealing
-'''
-
+#Stores most model training functions (apart from GA, hill climb, and simulated annealing)
 import random
 import time
 from math import e, ceil
@@ -436,8 +422,6 @@ baseLineModels = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitFo
 #         # print(calculateAllFitnesses(payoffs, models))
 
 
-
-
 # (5, 5), (8, 0), (0, 8), (2, 2)
 # payoffs[yourAction][hisAction] = yourPayoff
 # 0 cooperate and 1 is defect
@@ -453,8 +437,6 @@ baseLineModels = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitFo
 # models = [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat(), myModels[memorySize](int(trained_bin_model[2:], 2))]
 # print(calculateAllFitnesses(payoffs, models))
 # # print((trained_bin_model>>148)&1, (trained_bin_model>>144)&1, (trained_bin_model>>128)&1) #prints what happens with no defections - usually 0 0 0            
-
-
 
 # print("Basic Genetic Model:")
 # genetic_model = train_basic_genetic(15, 40, 0.1, [Defector(), Cooperator(), GrimTrigger(), TitForTat(), TwoTitForTat(), NiceTitForTat(), SuspiciousTitForTat()], payoffs=payoffs)

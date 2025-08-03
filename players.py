@@ -54,17 +54,6 @@ class ModelPlayer149(Player):
             if i == 0:
                 return (self.model >> 148) & 1
             if i  == 1:
-                '''
-                [what to do on first move][what to do for second move][what to do for third move][what to do after that]
-                [your first move][opponent's first move]
-                11 = 3
-                10
-                01 
-                00
-                2+11 
-                '''
-                # model[2* your move + opponent's move]
-                # {(): 1, (0, 0): 1, (0, 1): 0, (1, 1): 0, (1, 0, 0, 0, 1, 1, 1): 0}
                 encoding = (past_moves[0][0]<<1) + (past_moves[1][0])
                 return ((self.model >> 144) >> encoding) & 1
             if i == 2:
@@ -110,18 +99,6 @@ class ModelPlayer85(Player):
             if i == 0:
                 return (self.model >> 84) & 1
             if i  == 1:
-                '''
-                [what to do on first move][what to do for second move][what to do for third move][what to do after that]
-                [your first move][opponent's first move]
-                11 = 3
-                10
-                01 
-                00
-                2+11 
-                '''
-                # model[2* your move + opponent's move]
-                # {(): 1, (0, 0): 1, (0, 1): 0, (1, 1): 0, (1, 0, 0, 0, 1, 1, 1): 0}
-
                 encoding = (past_moves[0][0]<<1) + (past_moves[1][0])
                 return ((self.model >> 80) >> encoding) & 1
             if i == 2:

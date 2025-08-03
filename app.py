@@ -18,7 +18,7 @@ def get_players():
     payoffs = j["payoffs"]
     # print(players)
     models = []
-    #ik this code is ugly, easiest way to do it though
+    #Ugly code but it's ok
     for i in range(players['Tit For Tat']):
         models.append(TitForTat())
     for i in range(players['Grim Trigger']):
