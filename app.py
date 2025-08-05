@@ -48,7 +48,5 @@ def get_model():
 
     return train_simulated_annealing(numRestarts=10, temperature=100, successor=successor, models=models)
 
-    
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
