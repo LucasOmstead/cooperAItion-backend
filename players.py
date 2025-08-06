@@ -2,45 +2,78 @@ import random
 class Player:
     def __init__(self):
         self.score = 0
+        self.name = ""
     
     def get_action(self, past_moves, i):
         return 0 
 
 class Defector(Player):
+    def __init__(self):
+        super().__init__()
+        self.name = "Always Defect"
+    
     def get_action(self, past_moves, i):
         return 1 
 
 class Cooperator(Player):
+    def __init__(self):
+        super().__init__()
+        self.name = "Always Cooperate"
+    
     def get_action(self, past_moves, i):
         return 0
     
 class GrimTrigger(Player):
+    def __init__(self):
+        super().__init__()
+        self.name = "Grim Trigger"
+    
     def get_action(self, past_moves, i):
         return 1 if 1 in past_moves[1] else 0
 
 class RandomChooser(Player):
+    def __init__(self):
+        super().__init__()
+        self.name = "Random Chooser"
+    
     def get_action(self, past_moves, i):
         return random.choice((0, 1))
 
 class TitForTat(Player):
+    def __init__(self):
+        super().__init__()
+        self.name = "Tit For Tat"
+    
     def get_action(self, past_moves, i):
         if i == 0:
             return 0
         return past_moves[1][i-1]
 
 class TwoTitForTat(Player):
+    def __init__(self):
+        super().__init__()
+        self.name = "Two Tit For Tat"
+    
     def get_action(self, past_moves, i):
         if i < 2:
             return 0
         return 1 if (past_moves[1][i-1] == 1 and past_moves[1][i-2] == 1) else 0 
 
 class NiceTitForTat(Player):
+    def __init__(self):
+        super().__init__()
+        self.name = "Nice Tit For Tat"
+    
     def get_action(self, past_moves, i):
         if i == 0 or past_moves[1].count(1) / i < .2:
             return 0 
         return 1
     
 class SuspiciousTitForTat(Player):
+    def __init__(self):
+        super().__init__()
+        self.name = "Suspicious Tit For Tat"
+    
     def get_action(self, past_moves, i):
         if i == 0:
             return 1
@@ -48,6 +81,8 @@ class SuspiciousTitForTat(Player):
 
 class ModelPlayer149(Player):
     def __init__(self, model):
+        super().__init__()
+        self.name = "Sim Jim"
         self.model = model
     def get_model_move(self, past_moves, i):
         if i < 3:
