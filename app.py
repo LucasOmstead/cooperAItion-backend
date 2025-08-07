@@ -1,17 +1,30 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import json 
 from game import * #mainly train_simulated_annealing and successor
 from players import * #all player types
 
 app = Flask(__name__)
-CORS(app)
+
+# Configure CORS to only allow your frontend domain
+CORS(app, origins=["http://localhost", "http://localhost:80"])
+
+# Configure rate limiting
+limiter = Limiter(
+    key_func=get_remote_address,
+    app=app,
+    default_limits=["100 per hour", "10 per minute"],
+    storage_uri="memory://"
+)
 
 @app.route('/index')
 def home():
     return "Hello, world!"
 
 @app.route('/get_model', methods=["POST"])
+@limiter.limit("2 per minute")  # Only 2 model generations per minute per IP
 def get_players():
     j = request.get_json()
     players = j["players"]
@@ -42,11 +55,8 @@ def get_players():
 
 @app.route('/getmodel')
 def get_model():
-    data = request.get_json()
-    models = []
-    print(data)
-
-    return train_simulated_annealing(numRestarts=10, temperature=100, successor=successor, models=models)
+    # This endpoint appears to be unused/broken - disable it
+    return {"error": "This endpoint is deprecated"}, 404
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
