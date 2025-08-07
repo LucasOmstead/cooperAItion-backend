@@ -9,7 +9,7 @@ from players import * #all player types
 app = Flask(__name__)
 
 # Configure CORS to only allow your frontend domain
-CORS(app, origins=["http://localhost", "http://localhost:80"])
+
 
 # Configure rate limiting
 limiter = Limiter(
