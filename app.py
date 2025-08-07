@@ -38,7 +38,9 @@ def get_players():
     # print(models)
     print(bin(model))
     # print(perf)
-    return {"model": bin(model)[2:]}@app.route('/getmodel')
+    return {"model": bin(model)[2:]}
+
+@app.route('/getmodel')
 def get_model():
     # This endpoint appears to be unused/broken - disable it
     return {"error": "This endpoint is deprecated"}, 404
